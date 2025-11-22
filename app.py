@@ -151,34 +151,7 @@ def upload_pdf():
         
 
 
-@app.route('/api/test-gemini', methods=['POST'])
-def test_gemini():
-    if not request.json:
-        return jsonify({'error': 'Invalid request'}), 400
-    
-    api_key = request.json.get('api_key')
-    
-    if not api_key:
-        return jsonify({'error': 'No API key provided'}), 400
-    
-    try:
-        import google.generativeai as genai
-        genai.configure(api_key=api_key)
-        test_model = genai.GenerativeModel('gemini-1.5-flash')
-        
-        response = test_model.generate_content("Say hello")
-        
-        if GEMINI_API_KEY:
-            genai.configure(api_key=GEMINI_API_KEY)
-        
-        return jsonify({'message': 'API key is valid', 'test_response': response.text})
-    except Exception as e:
-        if GEMINI_API_KEY:
-            genai.configure(api_key=GEMINI_API_KEY)
-        return jsonify({'error': f'API key test failed: {str(e)}'}), 400
-
-
-        if os.path.getsize(filepath) > 16 * 1024 * 1024:
+if os.path.getsize(filepath) > 16 * 1024 * 1024:
             os.remove(filepath)
             return jsonify({'error': 'File too large'}), 400
         
@@ -194,6 +167,36 @@ def test_gemini():
         if os.path.exists(filepath):
             os.remove(filepath)
         return jsonify({'error': 'Error processing PDF. Please try again.'}), 500
+
+@app.route('/api/test-gemini', methods=['POST'])
+def test_gemini():
+    if not request.json:
+        return jsonify({'error': 'Invalid request'}), 400
+    
+    api_key = request.json.get('api_key')
+    
+    if not api_key:
+        return jsonify({'error': 'No API key provided'}), 400
+    
+    try:
+        import google.generativeai as genai
+        
+        GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
+        
+        genai.configure(api_key=api_key)
+        test_model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        response = test_model.generate_content("Say hello")
+        
+        if GEMINI_API_KEY:
+            genai.configure(api_key=GEMINI_API_KEY)
+        
+        return jsonify({'message': 'API key is valid', 'test_response': response.text})
+    except Exception as e:
+        GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
+        if GEMINI_API_KEY:
+            genai.configure(api_key=GEMINI_API_KEY)
+        return jsonify({'error': f'API key test failed: {str(e)}'}), 400
 
 @app.route('/api/study/<int:card_id>', methods=['POST'])
 def study_card(card_id):
