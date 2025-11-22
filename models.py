@@ -12,7 +12,7 @@ def get_db():
 def init_db():
     conn = get_db()
     cursor = conn.cursor()
-    
+
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS decks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -21,7 +21,7 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
-    
+
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS cards (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -34,7 +34,7 @@ def init_db():
             FOREIGN KEY (deck_id) REFERENCES decks (id) ON DELETE CASCADE
         )
     ''')
-    
+
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS study_sessions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -47,7 +47,7 @@ def init_db():
             FOREIGN KEY (card_id) REFERENCES cards (id) ON DELETE CASCADE
         )
     ''')
-    
+
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS quiz_results (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -58,7 +58,7 @@ def init_db():
             FOREIGN KEY (deck_id) REFERENCES decks (id) ON DELETE CASCADE
         )
     ''')
-    
+
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS badges (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -70,7 +70,7 @@ def init_db():
             earned_at TIMESTAMP
         )
     ''')
-    
+
     cursor.execute('''
         SELECT COUNT(*) FROM badges
     ''')
@@ -89,7 +89,7 @@ def init_db():
             INSERT INTO badges (name, description, icon, requirement, earned, earned_at)
             VALUES (?, ?, ?, ?, ?, ?)
         ''', badges_data)
-    
+
     conn.commit()
     conn.close()
 
@@ -103,7 +103,7 @@ class Deck:
         conn.commit()
         conn.close()
         return deck_id
-    
+
     @staticmethod
     def get_all():
         conn = get_db()
@@ -118,7 +118,7 @@ class Deck:
         decks = [dict(row) for row in cursor.fetchall()]
         conn.close()
         return decks
-    
+
     @staticmethod
     def get_by_id(deck_id):
         conn = get_db()
@@ -127,7 +127,7 @@ class Deck:
         deck = cursor.fetchone()
         conn.close()
         return dict(deck) if deck else None
-    
+
     @staticmethod
     def delete(deck_id):
         conn = get_db()
@@ -147,16 +147,16 @@ class Card:
             VALUES (?, ?, ?, ?)
         ''', (deck_id, question, answer, choices_json))
         card_id = cursor.lastrowid
-        
+
         cursor.execute('''
             INSERT INTO study_sessions (card_id)
             VALUES (?)
         ''', (card_id,))
-        
+
         conn.commit()
         conn.close()
         return card_id
-    
+
     @staticmethod
     def get_by_deck(deck_id):
         conn = get_db()
@@ -174,7 +174,7 @@ class Card:
                 card['choices'] = json.loads(card['choices'])
         conn.close()
         return cards
-    
+
     @staticmethod
     def get_due_cards(deck_id):
         conn = get_db()
@@ -192,35 +192,34 @@ class Card:
                 card['choices'] = json.loads(card['choices'])
         conn.close()
         return cards
-    
+
     @staticmethod
     def delete(card_id):
         conn = get_db()
         cursor = conn.cursor()
         cursor.execute('DELETE FROM cards WHERE id = ?', (card_id,))
         conn.commit()
-        conn.close()ommit()
         conn.close()
 
 class StudySession:
     @staticmethod
     def update(card_id, quality):
         from srs_algorithm import sm2_algorithm
-        
+
         conn = get_db()
         cursor = conn.cursor()
-        
+
         cursor.execute('''
             SELECT easiness_factor, interval, repetitions
             FROM study_sessions
             WHERE card_id = ?
         ''', (card_id,))
         session = cursor.fetchone()
-        
+
         if session:
             ef, interval, reps = session
             new_ef, new_interval, new_reps = sm2_algorithm(quality, ef, interval, reps)
-            
+
             cursor.execute('''
                 UPDATE study_sessions
                 SET easiness_factor = ?,
@@ -230,31 +229,31 @@ class StudySession:
                     last_reviewed = CURRENT_TIMESTAMP
                 WHERE card_id = ?
             ''', (new_ef, new_interval, new_reps, new_interval, card_id))
-            
+
             conn.commit()
-        
+
         conn.close()
-    
+
     @staticmethod
     def get_stats():
         conn = get_db()
         cursor = conn.cursor()
-        
+
         cursor.execute('SELECT COUNT(*) FROM study_sessions WHERE last_reviewed IS NOT NULL')
         total_studied = cursor.fetchone()[0]
-        
+
         cursor.execute('SELECT COUNT(*) FROM study_sessions WHERE next_review <= CURRENT_TIMESTAMP')
         due_today = cursor.fetchone()[0]
-        
+
         cursor.execute('SELECT AVG(easiness_factor) FROM study_sessions WHERE last_reviewed IS NOT NULL')
         avg_ef = cursor.fetchone()[0] or 0
-        
+
         conn.close()
-        
+
         return {
             'total_studied': total_studied,
             'due_today': due_today,
-            'average_retention': round(avg_ef, 2): round(avg_ef, 2)
+            'average_retention': round(avg_ef, 2)
         }
 
 class QuizResult:
@@ -268,7 +267,7 @@ class QuizResult:
         ''', (deck_id, score, total))
         conn.commit()
         conn.close()
-    
+
     @staticmethod
     def get_by_deck(deck_id):
         conn = get_db()
@@ -288,16 +287,16 @@ class Badge:
     def check_and_award():
         conn = get_db()
         cursor = conn.cursor()
-        
+
         cursor.execute('SELECT COUNT(*) FROM study_sessions WHERE last_reviewed IS NOT NULL')
         cards_studied = cursor.fetchone()[0]
-        
+
         cursor.execute('SELECT COUNT(*) FROM quiz_results')
         quizzes_completed = cursor.fetchone()[0]
-        
+
         cursor.execute('SELECT * FROM badges WHERE earned = 0')
         unearned_badges = cursor.fetchall()
-        
+
         newly_earned = []
         for badge in unearned_badges:
             badge_dict = dict(badge)
@@ -309,7 +308,7 @@ class Badge:
                         WHERE id = ?
                     ''', (badge_dict['id'],))
                     newly_earned.append(badge_dict['name'])
-            
+
             elif badge_dict['name'] == 'Quiz Starter' and quizzes_completed >= 1:
                 cursor.execute('''
                     UPDATE badges
@@ -317,7 +316,7 @@ class Badge:
                     WHERE id = ?
                 ''', (badge_dict['id'],))
                 newly_earned.append(badge_dict['name'])
-            
+
             elif badge_dict['name'] == 'Perfect Score':
                 cursor.execute('SELECT * FROM quiz_results WHERE score = total LIMIT 1')
                 if cursor.fetchone():
@@ -327,11 +326,11 @@ class Badge:
                         WHERE id = ?
                     ''', (badge_dict['id'],))
                     newly_earned.append(badge_dict['name'])
-        
+
         conn.commit()
         conn.close()
         return newly_earned
-    
+
     @staticmethod
     def get_all():
         conn = get_db()
