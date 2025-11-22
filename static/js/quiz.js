@@ -23,7 +23,7 @@ async function loadQuiz() {
         
         updateProgress();
     } catch (error) {
-        showToast('Error loading quiz: ' + error.message, 'error');
+        showMessage('Error loading quiz: ' + error.message, 'error');
     }
 }
 
@@ -102,7 +102,7 @@ function checkAnswer() {
     const correctAnswer = cards[currentQuestionIndex].answer;
     
     if (!userAnswer) {
-        showToast('Please enter an answer', 'warning');
+        showMessage('Please enter an answer', 'warning');
         return;
     }
     
@@ -243,11 +243,29 @@ function closeBadgeModal() {
     document.getElementById('badgeModal').classList.add('hidden');
 }
 
-function showToast(message, type = 'info') {
-    const toast = document.getElementById('toast');
-    toast.textContent = message;
-    toast.className = `toast ${type}`;
-    setTimeout(() => toast.classList.add('hidden'), 3000);
+function showMessage(message, type = 'info') {
+    const container = document.querySelector('main') || document.body;
+    
+    // Remove existing messages
+    const existingMessages = container.querySelectorAll('.inline-message');
+    existingMessages.forEach(msg => msg.remove());
+    
+    // Create new message
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `inline-message ${type}`;
+    
+    const icon = type === 'success' ? '✓' : type === 'error' ? '✗' : type === 'warning' ? '⚠' : 'ℹ';
+    messageDiv.innerHTML = `<span style="font-size: 1.2rem;">${icon}</span><span>${message}</span>`;
+    
+    // Insert at the top of the container
+    container.insertBefore(messageDiv, container.firstChild);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        messageDiv.style.opacity = '0';
+        messageDiv.style.transform = 'translateY(-10px)';
+        setTimeout(() => messageDiv.remove(), 300);
+    }, 5000);
 }
 
 function escapeHtml(text) {

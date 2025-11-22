@@ -59,7 +59,7 @@
             </section>
         </main>
 
-        <div id="toast" class="toast hidden"></div>
+        
     </div>
 
     <script>
@@ -75,7 +75,7 @@
                 
                 await loadCards();
             } catch (error) {
-                showToast('Error loading deck: ' + error.message, 'error');
+                showMessage('Error loading deck: ' + error.message, 'error');
             }
         }
 
@@ -91,7 +91,7 @@
                 
                 displayCards();
             } catch (error) {
-                showToast('Error loading cards: ' + error.message, 'error');
+                showMessage('Error loading cards: ' + error.message, 'error');
             }
         }
 
@@ -128,22 +128,22 @@
             
             try {
                 await fetch(`/api/cards/${cardId}`, { method: 'DELETE' });
-                showToast('Card deleted', 'success');
+                showMessage('Card deleted', 'success');
                 await loadCards();
             } catch (error) {
-                showToast('Error deleting card', 'error');
+                showMessage('Error deleting card', 'error');
             }
         }
 
         async function exportDeck(format) {
             try {
-                showToast(`Exporting deck as ${format.toUpperCase()}...`, 'info');
+                showMessage(`Exporting deck as ${format.toUpperCase()}...`, 'info');
                 
                 const response = await fetch(`/api/export/${DECK_ID}/${format}`);
                 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    showToast(errorData.error || 'Export failed', 'error');
+                    showMessage(errorData.error || 'Export failed', 'error');
                     return;
                 }
                 
@@ -171,9 +171,9 @@
                 window.URL.revokeObjectURL(url);
                 document.body.removeChild(a);
                 
-                showToast(`Deck exported as ${format.toUpperCase()} successfully!`, 'success');
+                showMessage(`Deck exported as ${format.toUpperCase()} successfully!`, 'success');
             } catch (error) {
-                showToast('Error exporting deck: ' + error.message, 'error');
+                showMessage('Error exporting deck: ' + error.message, 'error');
             }
         }
 
@@ -198,10 +198,10 @@
             
             try {
                 await fetch(`/api/decks/${DECK_ID}`, { method: 'DELETE' });
-                showToast('Deck deleted successfully!', 'success');
+                showMessage('Deck deleted successfully!', 'success');
                 setTimeout(() => location.href = '/', 1000);
             } catch (error) {
-                showToast('Error deleting deck', 'error');
+                showMessage('Error deleting deck', 'error');
             }
         }
 
@@ -211,11 +211,29 @@
             return div.innerHTML;
         }
 
-        function showToast(message, type = 'info') {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.className = `toast ${type}`;
-            setTimeout(() => toast.classList.add('hidden'), 3000);
+        function showMessage(message, type = 'info') {
+            const container = document.querySelector('main') || document.body;
+            
+            // Remove existing messages
+            const existingMessages = container.querySelectorAll('.inline-message');
+            existingMessages.forEach(msg => msg.remove());
+            
+            // Create new message
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `inline-message ${type}`;
+            
+            const icon = type === 'success' ? '✓' : type === 'error' ? '✗' : type === 'warning' ? '⚠' : 'ℹ';
+            messageDiv.innerHTML = `<span style="font-size: 1.2rem;">${icon}</span><span>${message}</span>`;
+            
+            // Insert at the top of the container
+            container.insertBefore(messageDiv, container.firstChild);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                messageDiv.style.opacity = '0';
+                messageDiv.style.transform = 'translateY(-10px)';
+                setTimeout(() => messageDiv.remove(), 300);
+            }, 5000);
         }
 
         loadDeck();

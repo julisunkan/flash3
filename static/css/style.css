@@ -741,31 +741,50 @@ textarea:focus {
     color: var(--text-light);
 }
 
-.toast {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    padding: 15px 25px;
-    background: var(--text);
-    color: white;
+.inline-message {
+    padding: 15px 20px;
+    margin: 15px 0;
     border-radius: 8px;
-    box-shadow: var(--shadow-lg);
-    z-index: 1000;
-    animation: slideIn 0.3s;
+    border-left: 4px solid;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: fadeInDown 0.3s ease;
+    font-weight: 500;
 }
 
-.toast.success { background: var(--success); }
-.toast.error { background: var(--error); }
-.toast.warning { background: var(--warning); }
+.inline-message.success {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: var(--success);
+    color: var(--success);
+}
 
-@keyframes slideIn {
+.inline-message.error {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: var(--error);
+    color: var(--error);
+}
+
+.inline-message.warning {
+    background: rgba(249, 115, 22, 0.1);
+    border-color: var(--warning);
+    color: var(--warning);
+}
+
+.inline-message.info {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+@keyframes fadeInDown {
     from {
-        transform: translateX(400px);
         opacity: 0;
+        transform: translateY(-10px);
     }
     to {
-        transform: translateX(0);
         opacity: 1;
+        transform: translateY(0);
     }
 }
 

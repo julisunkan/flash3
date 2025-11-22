@@ -67,12 +67,12 @@ function setupFileUpload() {
             
             if (response.ok) {
                 extractedText = data.text;
-                showToast('PDF processed successfully! Text extracted: ' + data.text.length + ' characters', 'success');
+                showMessage('PDF processed successfully! Text extracted: ' + data.text.length + ' characters', 'success');
             } else {
-                showToast(data.error || 'Error processing PDF', 'error');
+                showMessage(data.error || 'Error processing PDF', 'error');
             }
         } catch (error) {
-            showToast('Error uploading PDF: ' + error.message, 'error');
+            showMessage('Error uploading PDF: ' + error.message, 'error');
         } finally {
             showLoading(false);
         }
@@ -93,12 +93,12 @@ async function generateContent() {
     }
     
     if (!text) {
-        showToast('Please provide some text or upload a PDF', 'warning');
+        showMessage('Please provide some text or upload a PDF', 'warning');
         return;
     }
     
     if (text.length < 50) {
-        showToast('Text is too short. Please provide at least 50 characters (current: ' + text.length + ')', 'warning');
+        showMessage('Text is too short. Please provide at least 50 characters (current: ' + text.length + ')', 'warning');
         return;
     }
     
@@ -127,7 +127,7 @@ async function generateContent() {
         const data = await response.json();
         
         if (!response.ok) {
-            showToast(data.error || 'Error generating content', 'error');
+            showMessage(data.error || 'Error generating content', 'error');
             return;
         }
         
@@ -152,9 +152,9 @@ async function generateContent() {
             }
         }
         
-        showToast('Content generated successfully!', 'success');
+        showMessage('Content generated successfully!', 'success');
     } catch (error) {
-        showToast('Error generating content: ' + error.message, 'error');
+        showMessage('Error generating content: ' + error.message, 'error');
     } finally {
         showLoading(false);
     }
@@ -220,13 +220,13 @@ let isExportingPdf = false;
 
 async function exportPdf() {
     if (generatedCards.length === 0) {
-        showToast('No cards to export', 'warning');
+        showMessage('No cards to export', 'warning');
         return;
     }
     
     // Prevent concurrent exports
     if (isExportingPdf) {
-        showToast('Export already in progress', 'warning');
+        showMessage('Export already in progress', 'warning');
         return;
     }
     
@@ -255,9 +255,9 @@ async function exportPdf() {
             const contentType = response.headers.get('content-type');
             if (contentType && contentType.includes('application/json')) {
                 const data = await response.json();
-                showToast(data.error || 'Error exporting PDF', 'error');
+                showMessage(data.error || 'Error exporting PDF', 'error');
             } else {
-                showToast('Error exporting PDF', 'error');
+                showMessage('Error exporting PDF', 'error');
             }
             return;
         }
@@ -267,14 +267,14 @@ async function exportPdf() {
         
         // Verify we got a non-empty blob
         if (blob.size === 0) {
-            showToast('Received empty PDF from server', 'error');
+            showMessage('Received empty PDF from server', 'error');
             return;
         }
         
         // Verify content type from headers (more reliable than blob.type)
         const contentType = response.headers.get('content-type');
         if (contentType && !contentType.includes('application/pdf')) {
-            showToast('Invalid PDF format received', 'error');
+            showMessage('Invalid PDF format received', 'error');
             return;
         }
         
@@ -290,9 +290,9 @@ async function exportPdf() {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
         
-        showToast('PDF exported successfully!', 'success');
+        showMessage('PDF exported successfully!', 'success');
     } catch (error) {
-        showToast('Error exporting PDF: ' + error.message, 'error');
+        showMessage('Error exporting PDF: ' + error.message, 'error');
     } finally {
         // Re-enable button and restore text
         exportBtn.disabled = false;
@@ -305,12 +305,12 @@ async function saveCards() {
     const deckName = document.getElementById('deckName').value.trim();
     
     if (!deckName) {
-        showToast('Please enter a deck name', 'warning');
+        showMessage('Please enter a deck name', 'warning');
         return;
     }
     
     if (generatedCards.length === 0) {
-        showToast('No cards to save', 'warning');
+        showMessage('No cards to save', 'warning');
         return;
     }
     
@@ -345,7 +345,7 @@ async function saveCards() {
             }
         }
         
-        showToast(`Deck "${deckName}" created with ${savedCount} cards!`, 'success');
+        showMessage(`Deck "${deckName}" created with ${savedCount} cards!`, 'success');
         
         document.getElementById('textInput').value = '';
         document.getElementById('deckName').value = '';
@@ -360,7 +360,7 @@ async function saveCards() {
             location.href = `/deck/${deckId}`;
         }, 1000);
     } catch (error) {
-        showToast('Error saving cards: ' + error.message, 'error');
+        showMessage('Error saving cards: ' + error.message, 'error');
     }
 }
 
@@ -390,7 +390,7 @@ async function loadDecks() {
             </div>
         `).join('');
     } catch (error) {
-        showToast('Error loading decks: ' + error.message, 'error');
+        showMessage('Error loading decks: ' + error.message, 'error');
     }
 }
 
@@ -407,11 +407,32 @@ function showLoading(show) {
     }
 }
 
-function showToast(message, type = 'info') {
-    const toast = document.getElementById('toast');
-    toast.textContent = message;
-    toast.className = `toast ${type}`;
-    setTimeout(() => toast.classList.add('hidden'), 3000);
+function showMessage(message, type = 'info', container = null) {
+    // If no container specified, use the main section
+    if (!container) {
+        container = document.querySelector('section') || document.querySelector('main');
+    }
+    
+    // Remove existing messages
+    const existingMessages = container.querySelectorAll('.inline-message');
+    existingMessages.forEach(msg => msg.remove());
+    
+    // Create new message
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `inline-message ${type}`;
+    
+    const icon = type === 'success' ? '✓' : type === 'error' ? '✗' : type === 'warning' ? '⚠' : 'ℹ';
+    messageDiv.innerHTML = `<span style="font-size: 1.2rem;">${icon}</span><span>${message}</span>`;
+    
+    // Insert at the top of the container
+    container.insertBefore(messageDiv, container.firstChild);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        messageDiv.style.opacity = '0';
+        messageDiv.style.transform = 'translateY(-10px)';
+        setTimeout(() => messageDiv.remove(), 300);
+    }, 5000);
 }
 
 function closeBadgeModal() {
