@@ -141,7 +141,21 @@ class Card:
     def create(deck_id, question, answer, choices=None):
         conn = get_db()
         cursor = conn.cursor()
-        choices_json = json.dumps(choices) if choices else None
+        
+        # Ensure choices is properly formatted
+        choices_json = None
+        if choices:
+            if isinstance(choices, str):
+                # If it's already a string, try to parse and re-encode to ensure valid JSON
+                try:
+                    parsed = json.loads(choices)
+                    choices_json = json.dumps(parsed)
+                except json.JSONDecodeError:
+                    # If it's not valid JSON, treat as None
+                    choices_json = None
+            elif isinstance(choices, list):
+                choices_json = json.dumps(choices)
+        
         cursor.execute('''
             INSERT INTO cards (deck_id, question, answer, choices)
             VALUES (?, ?, ?, ?)
@@ -171,7 +185,11 @@ class Card:
         cards = [dict(row) for row in cursor.fetchall()]
         for card in cards:
             if card['choices']:
-                card['choices'] = json.loads(card['choices'])
+                try:
+                    card['choices'] = json.loads(card['choices'])
+                except (json.JSONDecodeError, TypeError):
+                    # If choices is invalid JSON, set to None
+                    card['choices'] = None
         conn.close()
         return cards
 
@@ -189,7 +207,11 @@ class Card:
         cards = [dict(row) for row in cursor.fetchall()]
         for card in cards:
             if card['choices']:
-                card['choices'] = json.loads(card['choices'])
+                try:
+                    card['choices'] = json.loads(card['choices'])
+                except (json.JSONDecodeError, TypeError):
+                    # If choices is invalid JSON, set to None
+                    card['choices'] = None
         conn.close()
         return cards
 
