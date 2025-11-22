@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#6366f1">
+    <title>Flashcard Deck</title>
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <button onclick="location.href='/'" class="back-btn">← Back</button>
+            <h1 id="deckName">Loading...</h1>
+        </header>
+
+        <main>
+            <div class="deck-actions">
+                <button onclick="location.href='/study/{{ deck_id }}'" class="action-btn study-btn">
+                    📖 Study Mode
+                </button>
+                <button onclick="location.href='/quiz/{{ deck_id }}'" class="action-btn quiz-btn">
+                    🎯 Quiz Mode
+                </button>
+                <button onclick="exportDeck('json')" class="action-btn">📥 Export JSON</button>
+                <button onclick="exportDeck('csv')" class="action-btn">📥 Export CSV</button>
+                <button onclick="exportDeck('anki')" class="action-btn">📥 Export Anki</button>
+                <button onclick="deleteDeck()" class="action-btn delete-btn">🗑️ Delete Deck</button>
+            </div>
+
+            <div class="stats-bar">
+                <div class="stat">
+                    <span class="stat-label">Total Cards:</span>
+                    <span id="totalCards" class="stat-value">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Due for Review:</span>
+                    <span id="dueCards" class="stat-value">0</span>
+                </div>
+            </div>
+
+            <section class="cards-list">
+                <h2>Flashcards</h2>
+                <div id="cardsList"></div>
+            </section>
+        </main>
+
+        <div id="toast" class="toast hidden"></div>
+    </div>
+
+    <script>
+        const DECK_ID = {{ deck_id }};
+        let currentDeck = null;
+        let cards = [];
+
+        async function loadDeck() {
+            try {
+                const response = await fetch(`/api/decks/${DECK_ID}`);
+                currentDeck = await response.json();
+                document.getElementById('deckName').textContent = currentDeck.name;
+                
+                await loadCards();
+            } catch (error) {
+                showToast('Error loading deck: ' + error.message, 'error');
+            }
+        }
+
+        async function loadCards() {
+            try {
+                const response = await fetch(`/api/decks/${DECK_ID}/cards`);
+                cards = await response.json();
+                
+                document.getElementById('totalCards').textContent = cards.length;
+                
+                const dueCards = cards.filter(c => new Date(c.next_review) <= new Date()).length;
+                document.getElementById('dueCards').textContent = dueCards;
+                
+                displayCards();
+            } catch (error) {
+                showToast('Error loading cards: ' + error.message, 'error');
+            }
+        }
+
+        function displayCards() {
+            const container = document.getElementById('cardsList');
+            
+            if (cards.length === 0) {
+                container.innerHTML = '<p class="empty-state">No flashcards in this deck yet.</p>';
+                return;
+            }
+            
+            container.innerHTML = cards.map((card, index) => `
+                <div class="card-item">
+                    <div class="card-number">#${index + 1}</div>
+                    <div class="card-content">
+                        <div class="card-question"><strong>Q:</strong> ${escapeHtml(card.question)}</div>
+                        <div class="card-answer"><strong>A:</strong> ${escapeHtml(card.answer)}</div>
+                        ${card.choices ? `<div class="card-choices">Choices: ${JSON.parse(card.choices).join(', ')}</div>` : ''}
+                    </div>
+                    <button onclick="deleteCard(${card.id})" class="delete-card-btn">🗑️</button>
+                </div>
+            `).join('');
+        }
+
+        async function deleteCard(cardId) {
+            if (!confirm('Delete this flashcard?')) return;
+            
+            try {
+                await fetch(`/api/cards/${cardId}`, { method: 'DELETE' });
+                showToast('Card deleted', 'success');
+                await loadCards();
+            } catch (error) {
+                showToast('Error deleting card', 'error');
+            }
+        }
+
+        async function exportDeck(format) {
+            window.location.href = `/api/export/${DECK_ID}/${format}`;
+        }
+
+        async function deleteDeck() {
+            if (!confirm('Delete this entire deck? This cannot be undone!')) return;
+            
+            try {
+                await fetch(`/api/decks/${DECK_ID}`, { method: 'DELETE' });
+                showToast('Deck deleted', 'success');
+                setTimeout(() => location.href = '/', 1000);
+            } catch (error) {
+                showToast('Error deleting deck', 'error');
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+
+        loadDeck();
+    </script>
+</body>
+</html>

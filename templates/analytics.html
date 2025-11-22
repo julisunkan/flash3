@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#6366f1">
+    <title>Analytics Dashboard</title>
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <button onclick="location.href='/'" class="back-btn">← Home</button>
+            <h1>📊 Analytics Dashboard</h1>
+        </header>
+
+        <main>
+            <section class="stats-overview">
+                <div class="stat-card">
+                    <div class="stat-icon">📚</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="totalStudied">0</div>
+                        <div class="stat-label">Cards Studied</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⏰</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="dueToday">0</div>
+                        <div class="stat-label">Due Today</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🎯</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="avgRetention">0.0</div>
+                        <div class="stat-label">Avg Retention</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="badges-section">
+                <h2>🏆 Badges & Achievements</h2>
+                <div id="badgesGrid" class="badges-grid"></div>
+            </section>
+
+            <section class="decks-performance">
+                <h2>📈 Deck Performance</h2>
+                <div id="decksPerformance" class="performance-list"></div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        async function loadAnalytics() {
+            try {
+                const [statsRes, badgesRes, decksRes] = await Promise.all([
+                    fetch('/api/stats'),
+                    fetch('/api/badges'),
+                    fetch('/api/decks')
+                ]);
+
+                const stats = await statsRes.json();
+                const badges = await badgesRes.json();
+                const decks = await decksRes.json();
+
+                document.getElementById('totalStudied').textContent = stats.total_studied;
+                document.getElementById('dueToday').textContent = stats.due_today;
+                document.getElementById('avgRetention').textContent = stats.average_retention;
+
+                displayBadges(badges);
+                displayDecksPerformance(decks);
+            } catch (error) {
+                console.error('Error loading analytics:', error);
+            }
+        }
+
+        function displayBadges(badges) {
+            const grid = document.getElementById('badgesGrid');
+            grid.innerHTML = badges.map(badge => `
+                <div class="badge-card ${badge.earned ? 'earned' : 'locked'}">
+                    <div class="badge-icon">${badge.icon}</div>
+                    <div class="badge-name">${badge.name}</div>
+                    <div class="badge-description">${badge.description}</div>
+                    ${badge.earned ? 
+                        `<div class="badge-earned">Earned ${new Date(badge.earned_at).toLocaleDateString()}</div>` :
+                        `<div class="badge-locked">🔒 Locked</div>`
+                    }
+                </div>
+            `).join('');
+        }
+
+        function displayDecksPerformance(decks) {
+            const container = document.getElementById('decksPerformance');
+            
+            if (decks.length === 0) {
+                container.innerHTML = '<p class="empty-state">No decks created yet.</p>';
+                return;
+            }
+
+            container.innerHTML = decks.map(deck => `
+                <div class="performance-item">
+                    <div class="performance-info">
+                        <h3>${escapeHtml(deck.name)}</h3>
+                        <p>${deck.card_count} cards</p>
+                    </div>
+                    <button onclick="location.href='/deck/${deck.id}'" class="view-btn">View Deck →</button>
+                </div>
+            `).join('');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        loadAnalytics();
+    </script>
+</body>
+</html>

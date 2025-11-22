@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#6366f1">
+    <title>Study Mode</title>
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <button onclick="location.href='/deck/{{ deck_id }}'" class="back-btn">← Back to Deck</button>
+            <h1>📖 Study Mode</h1>
+        </header>
+
+        <main class="study-container">
+            <div class="progress-bar">
+                <div id="progressFill" class="progress-fill"></div>
+                <span id="progressText" class="progress-text">0 / 0</span>
+            </div>
+
+            <div id="studyContent">
+                <div id="noCards" class="empty-state hidden">
+                    <h2>🎉 All caught up!</h2>
+                    <p>No cards are due for review right now.</p>
+                    <button onclick="location.href='/deck/{{ deck_id }}'" class="primary-btn">Back to Deck</button>
+                </div>
+
+                <div id="flashcard" class="flashcard hidden">
+                    <div class="flashcard-inner" id="cardInner">
+                        <div class="flashcard-front">
+                            <div class="card-label">Question</div>
+                            <div id="questionText" class="card-text"></div>
+                            <button onclick="flipCard()" class="flip-btn">🔄 Show Answer</button>
+                            <button onclick="speakText('question')" class="tts-btn">🔊 Read Aloud</button>
+                        </div>
+                        <div class="flashcard-back">
+                            <div class="card-label">Answer</div>
+                            <div id="answerText" class="card-text"></div>
+                            <div class="rating-buttons">
+                                <p>How well did you know this?</p>
+                                <button onclick="rateCard(0)" class="rate-btn rate-0">😢 Didn't Know</button>
+                                <button onclick="rateCard(3)" class="rate-btn rate-3">🤔 Hard</button>
+                                <button onclick="rateCard(4)" class="rate-btn rate-4">😊 Good</button>
+                                <button onclick="rateCard(5)" class="rate-btn rate-5">🎯 Easy</button>
+                            </div>
+                            <button onclick="flipCard()" class="flip-btn-back">🔄 Show Question</button>
+                            <button onclick="speakText('answer')" class="tts-btn">🔊 Read Aloud</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="keyboard-hint">
+                    💡 Keyboard shortcuts: Space = flip card, 1-4 = rate difficulty
+                </div>
+            </div>
+        </main>
+
+        <div id="toast" class="toast hidden"></div>
+        <div id="badgeModal" class="modal hidden">
+            <div class="modal-content">
+                <h2>🎉 Badge Earned!</h2>
+                <div id="badgeInfo"></div>
+                <button onclick="closeBadgeModal()" class="primary-btn">Continue Studying</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/study.js"></script>
+</body>
+</html>

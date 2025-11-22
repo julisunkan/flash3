@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI-powered flashcard generator with spaced repetition">
+    <meta name="theme-color" content="#6366f1">
+    <title>AI Flashcard Generator</title>
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎓 AI Flashcard Generator</h1>
+            <p class="subtitle">Transform any text or PDF into interactive flashcards</p>
+            <nav>
+                <button onclick="location.href='/analytics'" class="nav-btn">📊 Analytics</button>
+            </nav>
+        </header>
+
+        <main>
+            <section class="upload-section">
+                <h2>Create Flashcards</h2>
+                
+                <div class="input-method-tabs">
+                    <button class="tab-btn active" data-tab="text">📝 Text Input</button>
+                    <button class="tab-btn" data-tab="pdf">📄 Upload PDF</button>
+                </div>
+
+                <div class="tab-content active" id="text-tab">
+                    <textarea id="textInput" placeholder="Paste your text here..." rows="10"></textarea>
+                </div>
+
+                <div class="tab-content" id="pdf-tab">
+                    <div class="file-upload">
+                        <input type="file" id="pdfInput" accept=".pdf" hidden>
+                        <button onclick="document.getElementById('pdfInput').click()" class="upload-btn">
+                            📁 Choose PDF File
+                        </button>
+                        <p id="fileName" class="file-name"></p>
+                    </div>
+                </div>
+
+                <div class="generation-options">
+                    <label>
+                        <input type="radio" name="genType" value="flashcards" checked>
+                        🎴 Q&A Flashcards
+                    </label>
+                    <label>
+                        <input type="radio" name="genType" value="multiple_choice">
+                        ☑️ Multiple Choice
+                    </label>
+                    <label>
+                        <input type="radio" name="genType" value="summary">
+                        📋 Summary Only
+                    </label>
+                </div>
+
+                <div class="controls">
+                    <input type="text" id="deckName" placeholder="Deck name (e.g., Biology Chapter 5)" class="deck-input">
+                    <input type="number" id="numCards" placeholder="Number of cards" value="10" min="1" max="50" class="num-input">
+                    <button id="generateBtn" class="primary-btn">✨ Generate with AI</button>
+                </div>
+
+                <div id="loading" class="loading hidden">
+                    <div class="spinner"></div>
+                    <p>Processing with AI...</p>
+                </div>
+
+                <div id="summaryResult" class="result-box hidden">
+                    <h3>Summary</h3>
+                    <div id="summaryContent"></div>
+                </div>
+
+                <div id="cardsPreview" class="cards-preview hidden">
+                    <h3>Generated Cards Preview</h3>
+                    <div id="cardsContainer"></div>
+                    <button id="saveCardsBtn" class="primary-btn">💾 Save to Deck</button>
+                </div>
+            </section>
+
+            <section class="decks-section">
+                <h2>My Flashcard Decks</h2>
+                <div id="decksList" class="decks-grid"></div>
+            </section>
+        </main>
+
+        <div id="toast" class="toast hidden"></div>
+        <div id="badgeModal" class="modal hidden">
+            <div class="modal-content">
+                <h2>🎉 Badge Earned!</h2>
+                <div id="badgeInfo"></div>
+                <button onclick="closeBadgeModal()" class="primary-btn">Awesome!</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

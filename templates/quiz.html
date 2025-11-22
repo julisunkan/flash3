@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#6366f1">
+    <title>Quiz Mode</title>
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <button onclick="location.href='/deck/{{ deck_id }}'" class="back-btn">← Back to Deck</button>
+            <h1>🎯 Quiz Mode</h1>
+        </header>
+
+        <main class="quiz-container">
+            <div class="progress-bar">
+                <div id="progressFill" class="progress-fill"></div>
+                <span id="progressText" class="progress-text">Question 0 / 0</span>
+            </div>
+
+            <div id="quizContent">
+                <div id="noCards" class="empty-state hidden">
+                    <h2>No cards available</h2>
+                    <p>Add some flashcards to this deck first!</p>
+                    <button onclick="location.href='/deck/{{ deck_id }}'" class="primary-btn">Back to Deck</button>
+                </div>
+
+                <div id="questionCard" class="question-card hidden">
+                    <div class="question-number" id="questionNumber"></div>
+                    <div class="question-text" id="questionText"></div>
+                    
+                    <div id="mcqChoices" class="mcq-choices hidden"></div>
+                    
+                    <div id="openAnswer" class="open-answer hidden">
+                        <textarea id="userAnswer" placeholder="Type your answer here..." rows="4"></textarea>
+                        <button onclick="checkAnswer()" class="primary-btn">Submit Answer</button>
+                    </div>
+
+                    <div id="feedback" class="feedback hidden"></div>
+                </div>
+
+                <div id="results" class="quiz-results hidden">
+                    <h2>🎉 Quiz Complete!</h2>
+                    <div class="score-display">
+                        <div class="score-circle">
+                            <span id="scorePercent">0%</span>
+                        </div>
+                        <p id="scoreText"></p>
+                    </div>
+                    <div class="result-details" id="resultDetails"></div>
+                    <div class="result-actions">
+                        <button onclick="restartQuiz()" class="primary-btn">🔄 Retry Quiz</button>
+                        <button onclick="location.href='/deck/{{ deck_id }}'" class="primary-btn">📚 Back to Deck</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <div id="toast" class="toast hidden"></div>
+        <div id="badgeModal" class="modal hidden">
+            <div class="modal-content">
+                <h2>🎉 Badge Earned!</h2>
+                <div id="badgeInfo"></div>
+                <button onclick="closeBadgeModal()" class="primary-btn">Awesome!</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/quiz.js"></script>
+</body>
+</html>
