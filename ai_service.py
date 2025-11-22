@@ -1,107 +1,161 @@
-import os
-from openai import OpenAI
+import re
 
-client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+def extract_keywords(text, num_keywords=10):
+    """Extract important keywords from text"""
+    words = re.findall(r'\b[A-Za-z]{4,}\b', text.lower())
+    word_freq = {}
+    for word in words:
+        if word not in ['this', 'that', 'with', 'from', 'have', 'been', 'were', 'will', 'their', 'what', 'when', 'where', 'which']:
+            word_freq[word] = word_freq.get(word, 0) + 1
+    
+    sorted_words = sorted(word_freq.items(), key=lambda x: x[1], reverse=True)
+    return [word for word, _ in sorted_words[:num_keywords]]
 
 def generate_summary(text, max_words=200):
-    """Generate a concise summary of the input text"""
+    """Generate a concise summary of the input text using extractive summarization"""
     try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": f"You are a helpful assistant that creates concise summaries. Limit your summary to {max_words} words."},
-                {"role": "user", "content": f"Please summarize the following text:\n\n{text}"}
-            ],
-            max_tokens=500,
-            temperature=0.7
-        )
-        return response.choices[0].message.content.strip()
+        sentences = re.split(r'[.!?]+', text)
+        sentences = [s.strip() for s in sentences if len(s.strip()) > 20]
+        
+        if not sentences:
+            return "Text is too short to summarize."
+        
+        keywords = extract_keywords(text, 15)
+        
+        scored_sentences = []
+        for sentence in sentences[:50]:
+            score = sum(1 for keyword in keywords if keyword in sentence.lower())
+            if score > 0:
+                scored_sentences.append((score, sentence))
+        
+        scored_sentences.sort(reverse=True, key=lambda x: x[0])
+        
+        summary_sentences = [sent for _, sent in scored_sentences[:5]]
+        summary = '. '.join(summary_sentences)
+        
+        if len(summary) > max_words * 7:
+            summary = summary[:max_words * 7] + '...'
+        
+        return summary if summary else sentences[0]
     except Exception as e:
-        return f"Error generating summary: {str(e)}"
+        return f"Could not generate summary. Please try again."
 
 def generate_flashcards(text, num_cards=10):
-    """Generate question-answer flashcards from text"""
+    """Generate question-answer flashcards from text using intelligent extraction"""
     try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are an expert educator that creates effective study flashcards. Generate clear, concise questions and answers."},
-                {"role": "user", "content": f"Create {num_cards} flashcard question-answer pairs from this text. Format each as 'Q: [question]\\nA: [answer]\\n\\n'. Focus on key concepts and important information.\n\nText:\n{text}"}
-            ],
-            max_tokens=2000,
-            temperature=0.8
-        )
-        
-        content = response.choices[0].message.content.strip()
-        flashcards = []
-        
-        pairs = content.split('\n\n')
-        for pair in pairs:
-            if 'Q:' in pair and 'A:' in pair:
-                lines = pair.strip().split('\n')
-                question = ''
-                answer = ''
-                
-                for line in lines:
-                    if line.startswith('Q:'):
-                        question = line.replace('Q:', '').strip()
-                    elif line.startswith('A:'):
-                        answer = line.replace('A:', '').strip()
-                
-                if question and answer:
-                    flashcards.append({
-                        'question': question,
-                        'answer': answer
-                    })
-        
-        return flashcards[:num_cards]
+        return generate_simple_flashcards(text, num_cards)
     except Exception as e:
-        return [{'question': f'Error: {str(e)}', 'answer': 'Please check your API key and try again.'}]
+        return [{'question': 'Error generating flashcards', 'answer': 'Please try with different text.'}]
 
 def generate_multiple_choice(text, num_questions=5):
     """Generate multiple choice questions from text"""
     try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are an expert test creator. Generate challenging multiple choice questions with exactly 4 options each."},
-                {"role": "user", "content": f"Create {num_questions} multiple choice questions from this text. Format each as:\nQ: [question]\nA) [option 1]\nB) [option 2]\nC) [option 3]\nD) [option 4]\nCorrect: [A/B/C/D]\n\nText:\n{text}"}
-            ],
-            max_tokens=2000,
-            temperature=0.8
-        )
-        
-        content = response.choices[0].message.content.strip()
-        questions = []
-        
-        blocks = content.split('\n\n')
-        for block in blocks:
-            lines = block.strip().split('\n')
-            if len(lines) >= 6:
-                question = ''
-                choices = []
-                correct = ''
-                
-                for line in lines:
-                    if line.startswith('Q:'):
-                        question = line.replace('Q:', '').strip()
-                    elif line.startswith(('A)', 'B)', 'C)', 'D)')):
-                        choices.append(line[3:].strip())
-                    elif line.startswith('Correct:'):
-                        correct = line.replace('Correct:', '').strip()
-                
-                if question and len(choices) == 4 and correct:
-                    correct_index = {'A': 0, 'B': 1, 'C': 2, 'D': 3}.get(correct, 0)
-                    questions.append({
-                        'question': question,
-                        'choices': choices,
-                        'answer': choices[correct_index]
-                    })
-        
-        return questions[:num_questions]
+        return generate_simple_mcq(text, num_questions)
     except Exception as e:
+        return [{'question': 'Error generating questions', 'choices': ['Option 1', 'Option 2', 'Option 3', 'Option 4'], 'answer': 'Option 1'}]
+
+def generate_simple_flashcards(text, num_cards=10):
+    """Generate high-quality flashcards from text using intelligent extraction"""
+    sentences = re.split(r'[.!?]+', text)
+    sentences = [s.strip() for s in sentences if 30 <= len(s.strip()) <= 300]
+    
+    if not sentences:
+        return [{'question': 'What is the main topic?', 'answer': text[:200]}]
+    
+    flashcards = []
+    keywords = extract_keywords(text, 25)
+    
+    for i, sentence in enumerate(sentences[:num_cards * 3]):
+        words = sentence.split()
+        if len(words) < 7 or len(words) > 40:
+            continue
+        
+        keyword_in_sentence = [k for k in keywords if k in sentence.lower()]
+        if not keyword_in_sentence or len(keyword_in_sentence) < 1:
+            continue
+        
+        main_keyword = keyword_in_sentence[0]
+        
+        if main_keyword.capitalize() in sentence:
+            question = f"Define or explain: {main_keyword.capitalize()}"
+            answer = sentence
+        else:
+            question_patterns = [
+                f"What is {main_keyword}?",
+                f"Explain {main_keyword}.",
+                f"What does the text say about {main_keyword}?",
+                f"Describe {main_keyword}."
+            ]
+            question = question_patterns[i % len(question_patterns)]
+            answer = sentence
+        
+        if answer and len(answer) > 20:
+            flashcards.append({'question': question, 'answer': answer})
+        
+        if len(flashcards) >= num_cards:
+            break
+    
+    if len(flashcards) < num_cards and len(sentences) > 0:
+        for sentence in sentences[:num_cards]:
+            if len(flashcards) >= num_cards:
+                break
+            if len(sentence) > 20:
+                words = sentence.split()[:7]
+                question_start = ' '.join(words) + '...'
+                flashcards.append({
+                    'question': f'Complete: "{question_start}"',
+                    'answer': sentence
+                })
+    
+    return flashcards[:num_cards]
+
+def generate_simple_mcq(text, num_questions=5):
+    """Generate multiple choice questions from text"""
+    sentences = re.split(r'[.!?]+', text)
+    sentences = [s.strip() for s in sentences if len(s.strip()) > 30]
+    
+    if not sentences or len(sentences) < 2:
         return [{
-            'question': f'Error: {str(e)}',
-            'choices': ['Option 1', 'Option 2', 'Option 3', 'Option 4'],
-            'answer': 'Please check your API key and try again.'
+            'question': 'What does the text discuss?',
+            'choices': ['The main topic', 'Something else', 'Nothing specific', 'Multiple topics'],
+            'answer': 'The main topic'
         }]
+    
+    questions = []
+    keywords = extract_keywords(text, 15)
+    
+    for i, sentence in enumerate(sentences[:num_questions]):
+        words = sentence.split()
+        if len(words) < 5:
+            continue
+        
+        keyword_in_sentence = [k for k in keywords if k in sentence.lower()]
+        if not keyword_in_sentence:
+            keyword_in_sentence = [words[min(2, len(words)-1)]]
+        
+        distractors = []
+        for other_sentence in sentences:
+            if other_sentence != sentence and len(distractors) < 2:
+                distractor_words = other_sentence.split()
+                if len(distractor_words) > 3:
+                    distractors.append(' '.join(distractor_words[:8]) + '...')
+        
+        while len(distractors) < 3:
+            distractors.append(f"This is not mentioned in the text")
+        
+        question_text = f"What information is provided about {keyword_in_sentence[0]}?"
+        choices = [sentence, distractors[0], distractors[1], distractors[2]]
+        
+        import random
+        combined = list(zip(choices, [0, 1, 2, 3]))
+        random.shuffle(combined)
+        shuffled_choices, indices = zip(*combined)
+        correct_answer = shuffled_choices[indices.index(0)]
+        
+        questions.append({
+            'question': question_text,
+            'choices': list(shuffled_choices),
+            'answer': correct_answer
+        })
+    
+    return questions[:num_questions]

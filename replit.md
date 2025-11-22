@@ -4,7 +4,7 @@
 A production-ready Progressive Web App (PWA) that generates interactive flashcards from text or PDF files using AI. Built with Flask (Python), SQLite, and vanilla JavaScript.
 
 ## Features
-- **AI-Powered Generation**: Uses OpenAI API to create summaries, Q&A pairs, and multiple-choice questions
+- **Intelligent Content Generation**: Uses local keyword extraction and NLP algorithms to create summaries, Q&A pairs, and multiple-choice questions (no API keys required!)
 - **PDF Support**: Extract text from PDFs using PyPDF2 and pdfplumber
 - **OCR Capabilities**: Scan text from images in PDFs using Tesseract OCR
 - **Spaced Repetition**: SM-2 algorithm for optimized learning intervals
@@ -47,7 +47,7 @@ A production-ready Progressive Web App (PWA) that generates interactive flashcar
 ## Technology Stack
 - **Backend**: Flask (Python 3.11)
 - **Database**: SQLite3
-- **AI**: OpenAI API
+- **Content Generation**: Local keyword extraction, sentence scoring, and intelligent question generation
 - **PDF Processing**: PyPDF2, pdfplumber
 - **OCR**: Tesseract, pytesseract
 - **Frontend**: HTML5, CSS3, Vanilla JavaScript
@@ -69,5 +69,6 @@ None yet.
 
 ## Configuration
 - Port: 5000 (Flask development server bound to 0.0.0.0)
-- OpenAI API key required (stored as secret)
-- Tesseract OCR system dependency required
+- No API keys required - fully local processing
+- Tesseract OCR system dependency required for PDF image text extraction
+- File uploads: Max 16MB, PDF files only, secure storage with UUID naming

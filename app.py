@@ -53,14 +53,29 @@ def handle_cards(deck_id):
         return jsonify(cards)
     
     elif request.method == 'POST':
+        if not request.json:
+            return jsonify({'error': 'Invalid request'}), 400
+        
         data = request.json
-        card_id = Card.create(
-            deck_id,
-            data['question'],
-            data['answer'],
-            data.get('choices')
-        )
-        return jsonify({'id': card_id, 'message': 'Card created successfully'})
+        question = data.get('question', '').strip()
+        answer = data.get('answer', '').strip()
+        
+        if not question or not answer:
+            return jsonify({'error': 'Question and answer are required'}), 400
+        
+        if len(question) > 1000 or len(answer) > 2000:
+            return jsonify({'error': 'Question or answer too long'}), 400
+        
+        try:
+            card_id = Card.create(
+                deck_id,
+                question,
+                answer,
+                data.get('choices')
+            )
+            return jsonify({'id': card_id, 'message': 'Card created successfully'})
+        except Exception as e:
+            return jsonify({'error': 'Failed to create card'}), 500
 
 @app.route('/api/cards/<int:card_id>', methods=['DELETE'])
 def delete_card(card_id):
@@ -69,6 +84,9 @@ def delete_card(card_id):
 
 @app.route('/api/process-text', methods=['POST'])
 def process_text():
+    if not request.json:
+        return jsonify({'error': 'Invalid request'}), 400
+    
     data = request.json
     text = clean_text(data.get('text', ''))
     action = data.get('action', 'flashcards')
@@ -76,21 +94,31 @@ def process_text():
     if not text:
         return jsonify({'error': 'No text provided'}), 400
     
-    if action == 'summary':
-        result = generate_summary(text)
-        return jsonify({'summary': result})
+    if len(text) > 50000:
+        return jsonify({'error': 'Text too long. Maximum 50,000 characters.'}), 400
     
-    elif action == 'flashcards':
-        num_cards = data.get('num_cards', 10)
-        flashcards = generate_flashcards(text, num_cards)
-        return jsonify({'flashcards': flashcards})
+    if len(text) < 50:
+        return jsonify({'error': 'Text too short. Please provide at least 50 characters.'}), 400
     
-    elif action == 'multiple_choice':
-        num_questions = data.get('num_questions', 5)
-        questions = generate_multiple_choice(text, num_questions)
-        return jsonify({'questions': questions})
-    
-    return jsonify({'error': 'Invalid action'}), 400
+    try:
+        if action == 'summary':
+            result = generate_summary(text)
+            return jsonify({'summary': result})
+        
+        elif action == 'flashcards':
+            num_cards = min(int(data.get('num_cards', 10)), 50)
+            flashcards = generate_flashcards(text, num_cards)
+            return jsonify({'flashcards': flashcards})
+        
+        elif action == 'multiple_choice':
+            num_questions = min(int(data.get('num_questions', 5)), 25)
+            questions = generate_multiple_choice(text, num_questions)
+            return jsonify({'questions': questions})
+        
+        else:
+            return jsonify({'error': 'Invalid action'}), 400
+    except Exception as e:
+        return jsonify({'error': 'Failed to process text'}), 500
 
 @app.route('/api/upload-pdf', methods=['POST'])
 def upload_pdf():
@@ -102,40 +130,65 @@ def upload_pdf():
     if file.filename == '':
         return jsonify({'error': 'No file selected'}), 400
     
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    if not file or not allowed_file(file.filename):
+        return jsonify({'error': 'Invalid file type. Only PDF files are allowed.'}), 400
+    
+    if file.content_length and file.content_length > app.config['MAX_CONTENT_LENGTH']:
+        return jsonify({'error': 'File too large. Maximum size is 16MB.'}), 400
+    
+    filename = secure_filename(file.filename)
+    import uuid
+    unique_filename = f"{uuid.uuid4()}_{filename}"
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+    
+    try:
         file.save(filepath)
         
-        try:
-            text = process_pdf_file(filepath)
-            
+        if not os.path.exists(filepath) or os.path.getsize(filepath) == 0:
+            return jsonify({'error': 'File upload failed'}), 500
+        
+        if os.path.getsize(filepath) > 16 * 1024 * 1024:
             os.remove(filepath)
-            
-            if text:
-                return jsonify({'text': clean_text(text), 'message': 'PDF processed successfully'})
-            else:
-                return jsonify({'error': 'Could not extract text from PDF'}), 400
-        except Exception as e:
-            if os.path.exists(filepath):
-                os.remove(filepath)
-            return jsonify({'error': f'Error processing PDF: {str(e)}'}), 500
-    
-    return jsonify({'error': 'Invalid file type. Only PDF and TXT files are allowed.'}), 400
+            return jsonify({'error': 'File too large'}), 400
+        
+        text = process_pdf_file(filepath)
+        
+        os.remove(filepath)
+        
+        if text and len(text.strip()) > 0:
+            return jsonify({'text': clean_text(text), 'message': 'PDF processed successfully'})
+        else:
+            return jsonify({'error': 'Could not extract text from PDF. File may be scanned or empty.'}), 400
+    except Exception as e:
+        if os.path.exists(filepath):
+            os.remove(filepath)
+        return jsonify({'error': 'Error processing PDF. Please try again.'}), 500
 
 @app.route('/api/study/<int:card_id>', methods=['POST'])
 def study_card(card_id):
+    if not request.json:
+        return jsonify({'error': 'Invalid request'}), 400
+    
     data = request.json
     quality = data.get('quality', 3)
     
-    StudySession.update(card_id, quality)
+    try:
+        quality = int(quality)
+        if quality < 0 or quality > 5:
+            return jsonify({'error': 'Quality must be between 0 and 5'}), 400
+    except (ValueError, TypeError):
+        return jsonify({'error': 'Invalid quality value'}), 400
     
-    newly_earned = Badge.check_and_award()
-    
-    return jsonify({
-        'message': 'Study session recorded',
-        'badges_earned': newly_earned
-    })
+    try:
+        StudySession.update(card_id, quality)
+        newly_earned = Badge.check_and_award()
+        
+        return jsonify({
+            'message': 'Study session recorded',
+            'badges_earned': newly_earned
+        })
+    except Exception as e:
+        return jsonify({'error': 'Failed to record study session'}), 500
 
 @app.route('/api/decks/<int:deck_id>/due-cards', methods=['GET'])
 def get_due_cards(deck_id):
@@ -144,15 +197,30 @@ def get_due_cards(deck_id):
 
 @app.route('/api/quiz-results', methods=['POST'])
 def save_quiz_result():
+    if not request.json:
+        return jsonify({'error': 'Invalid request'}), 400
+    
     data = request.json
-    QuizResult.save(data['deck_id'], data['score'], data['total'])
     
-    newly_earned = Badge.check_and_award()
-    
-    return jsonify({
-        'message': 'Quiz result saved',
-        'badges_earned': newly_earned
-    })
+    try:
+        deck_id = int(data.get('deck_id', 0))
+        score = int(data.get('score', 0))
+        total = int(data.get('total', 0))
+        
+        if deck_id <= 0 or score < 0 or total <= 0 or score > total:
+            return jsonify({'error': 'Invalid quiz data'}), 400
+        
+        QuizResult.save(deck_id, score, total)
+        newly_earned = Badge.check_and_award()
+        
+        return jsonify({
+            'message': 'Quiz result saved',
+            'badges_earned': newly_earned
+        })
+    except (ValueError, TypeError, KeyError) as e:
+        return jsonify({'error': 'Invalid request data'}), 400
+    except Exception as e:
+        return jsonify({'error': 'Failed to save quiz result'}), 500
 
 @app.route('/api/decks/<int:deck_id>/quiz-results', methods=['GET'])
 def get_quiz_results(deck_id):
@@ -226,6 +294,10 @@ def quiz_page(deck_id):
 @app.route('/analytics')
 def analytics_page():
     return render_template('analytics.html')
+
+@app.route('/sw.js')
+def service_worker():
+    return send_file('sw.js', mimetype='application/javascript')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
