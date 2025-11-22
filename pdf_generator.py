@@ -137,16 +137,16 @@ def generate_flashcards_pdf(cards, deck_name="Flashcards"):
                 
                 # Convert choice to string for comparison
                 choice_str = str(choice).strip()
-                letter = chr(65 + j)  # A, B, C, D
+                choice_letter = chr(65 + j)  # A, B, C, D
                 safe_choice = escape_for_pdf(choice_str)
                 # Compare original values
                 is_correct = choice_str == original_answer
                 
                 if is_correct:
-                    choice_text = f"<b>{letter}. {safe_choice} ✓ (Correct)</b>"
+                    choice_text = f"<b>{choice_letter}. {safe_choice} ✓ (Correct)</b>"
                     choice_para = Paragraph(choice_text, choice_style)
                 else:
-                    choice_text = f"{letter}. {safe_choice}"
+                    choice_text = f"{choice_letter}. {safe_choice}"
                     choice_para = Paragraph(choice_text, choice_style)
                 
                 story.append(choice_para)
