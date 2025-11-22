@@ -475,6 +475,10 @@ def analytics_page():
 def service_worker():
     return send_file('sw.js', mimetype='application/javascript')
 
+@app.route('/manifest.json')
+def manifest():
+    return send_file('static/manifest.json', mimetype='application/manifest+json')
+
 @app.errorhandler(404)
 def not_found(error):
     # If it's an API request, return JSON
