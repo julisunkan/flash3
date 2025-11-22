@@ -27,7 +27,19 @@
                 <button onclick="exportDeck('csv')" class="action-btn">📥 Export CSV</button>
                 <button onclick="exportDeck('anki')" class="action-btn">📥 Export Anki</button>
                 <button onclick="exportDeck('pdf')" class="action-btn">📄 Export PDF</button>
-                <button onclick="deleteDeck()" class="action-btn delete-btn">🗑️ Delete Deck</button>
+                <button onclick="showDeleteConfirmation()" class="action-btn delete-btn" id="deleteDeckBtn">🗑️ Delete Deck</button>
+            </div>
+
+            <div id="deleteConfirmation" class="delete-confirmation hidden">
+                <div class="delete-confirmation-content">
+                    <div class="delete-icon">⚠️</div>
+                    <h3>Delete Deck?</h3>
+                    <p>Are you sure you want to delete "<span id="confirmDeckName"></span>"? This action cannot be undone!</p>
+                    <div class="delete-confirmation-actions">
+                        <button onclick="cancelDelete()" class="confirm-btn cancel-btn">❌ Cancel</button>
+                        <button onclick="confirmDelete()" class="confirm-btn delete-confirm-btn">🗑️ Yes, Delete</button>
+                    </div>
+                </div>
             </div>
 
             <div class="stats-bar">
@@ -165,12 +177,28 @@
             }
         }
 
-        async function deleteDeck() {
-            if (!confirm('Delete this entire deck? This cannot be undone!')) return;
+        function showDeleteConfirmation() {
+            const confirmation = document.getElementById('deleteConfirmation');
+            const deckNameSpan = document.getElementById('confirmDeckName');
+            deckNameSpan.textContent = currentDeck?.name || 'this deck';
+            confirmation.classList.remove('hidden');
+            confirmation.classList.add('show');
+        }
+
+        function cancelDelete() {
+            const confirmation = document.getElementById('deleteConfirmation');
+            confirmation.classList.remove('show');
+            setTimeout(() => confirmation.classList.add('hidden'), 300);
+        }
+
+        async function confirmDelete() {
+            const confirmation = document.getElementById('deleteConfirmation');
+            confirmation.classList.remove('show');
+            setTimeout(() => confirmation.classList.add('hidden'), 300);
             
             try {
                 await fetch(`/api/decks/${DECK_ID}`, { method: 'DELETE' });
-                showToast('Deck deleted', 'success');
+                showToast('Deck deleted successfully!', 'success');
                 setTimeout(() => location.href = '/', 1000);
             } catch (error) {
                 showToast('Error deleting deck', 'error');
