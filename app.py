@@ -429,7 +429,13 @@ def service_worker():
 
 @app.errorhandler(404)
 def not_found(error):
-    return jsonify({'error': 'Route not found'}), 404
+    # If it's an API request, return JSON
+    if request.path.startswith('/api/'):
+        return jsonify({'error': 'Route not found'}), 404
+    
+    # For HTML requests, redirect to home page
+    from flask import redirect
+    return redirect('/')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
