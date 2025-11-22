@@ -6,6 +6,16 @@ from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from io import BytesIO
 from datetime import datetime
+import html
+
+def escape_for_pdf(text):
+    """Escape HTML and special characters for safe PDF rendering"""
+    if text is None:
+        return ""
+    # Convert to string and escape HTML entities
+    text = str(text)
+    text = html.escape(text)
+    return text
 
 def generate_flashcards_pdf(cards, deck_name="Flashcards"):
     """
@@ -17,7 +27,17 @@ def generate_flashcards_pdf(cards, deck_name="Flashcards"):
     
     Returns:
         BytesIO object containing the PDF
+    
+    Raises:
+        ValueError: If cards data is invalid
+        Exception: If PDF generation fails
     """
+    if not cards or not isinstance(cards, list):
+        raise ValueError("Cards must be a non-empty list")
+    
+    if len(cards) > 100:
+        raise ValueError("Cannot export more than 100 cards at once")
+    
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter,
                            rightMargin=72, leftMargin=72,
@@ -78,45 +98,63 @@ def generate_flashcards_pdf(cards, deck_name="Flashcards"):
     
     story = []
     
-    # Title
-    story.append(Paragraph(f"📚 {deck_name}", title_style))
+    # Title - escape deck name
+    safe_deck_name = escape_for_pdf(deck_name)
+    story.append(Paragraph(f"📚 {safe_deck_name}", title_style))
     story.append(Paragraph(f"Generated on {datetime.now().strftime('%B %d, %Y')}", styles['Normal']))
     story.append(Spacer(1, 0.3*inch))
     
     # Add cards
+    valid_card_count = 0
     for i, card in enumerate(cards, 1):
+        if not isinstance(card, dict):
+            raise ValueError(f"Card {i} is not a valid dictionary")
+        
+        if 'question' not in card or 'answer' not in card:
+            raise ValueError(f"Card {i} is missing required fields")
+        
+        valid_card_count += 1
+        
         # Card number
-        card_header = f"Card #{i}"
+        card_header = f"Card #{valid_card_count}"
         story.append(Paragraph(card_header, heading_style))
         
-        # Question
+        # Question - escape user content
+        question = escape_for_pdf(card.get('question', 'No question'))
         story.append(Paragraph("<b>Question:</b>", question_style))
-        story.append(Paragraph(card.get('question', 'No question'), answer_style))
+        story.append(Paragraph(question, answer_style))
         story.append(Spacer(1, 0.1*inch))
         
         # Check if it's a multiple choice question
-        if 'choices' in card and card['choices']:
-            # Multiple choice
+        if 'choices' in card and card['choices'] and isinstance(card['choices'], list):
+            # Multiple choice - compare original values before escaping
+            original_answer = card.get('answer', '').strip()
             story.append(Paragraph("<b>Answer Choices:</b>", question_style))
             
-            for j, choice in enumerate(card['choices']):
+            for j, choice in enumerate(card['choices'][:10]):  # Limit to 10 choices max
+                if not choice:
+                    continue
+                    
                 letter = chr(65 + j)  # A, B, C, D
-                is_correct = choice == card.get('answer', '')
+                safe_choice = escape_for_pdf(choice)
+                # Compare original values
+                is_correct = choice.strip() == original_answer
                 
                 if is_correct:
-                    choice_text = f"<b>{letter}. {choice} ✓ (Correct)</b>"
+                    choice_text = f"<b>{letter}. {safe_choice} ✓ (Correct)</b>"
                     choice_para = Paragraph(choice_text, choice_style)
                 else:
-                    choice_text = f"{letter}. {choice}"
+                    choice_text = f"{letter}. {safe_choice}"
                     choice_para = Paragraph(choice_text, choice_style)
                 
                 story.append(choice_para)
             
             story.append(Spacer(1, 0.15*inch))
         else:
-            # Regular Q&A
+            # Regular Q&A - escape user content
+            answer = escape_for_pdf(card.get('answer', 'No answer'))
             story.append(Paragraph("<b>Answer:</b>", question_style))
-            story.append(Paragraph(card.get('answer', 'No answer'), answer_style))
+            story.append(Paragraph(answer, answer_style))
             story.append(Spacer(1, 0.15*inch))
         
         # Add separator line except for last card

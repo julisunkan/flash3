@@ -195,13 +195,29 @@ function displayCardsPreview(cards) {
     document.getElementById('exportPdfBtn').onclick = exportPdf;
 }
 
+// Prevent concurrent PDF exports
+let isExportingPdf = false;
+
 async function exportPdf() {
     if (generatedCards.length === 0) {
         showToast('No cards to export', 'warning');
         return;
     }
     
+    // Prevent concurrent exports
+    if (isExportingPdf) {
+        showToast('Export already in progress', 'warning');
+        return;
+    }
+    
     const deckName = document.getElementById('deckName').value.trim() || 'Flashcards';
+    const exportBtn = document.getElementById('exportPdfBtn');
+    
+    // Disable button and show loading state
+    const originalText = exportBtn.textContent;
+    exportBtn.disabled = true;
+    exportBtn.textContent = '📄 Exporting...';
+    isExportingPdf = true;
     
     try {
         const response = await fetch('/api/export-cards-pdf', {
@@ -213,26 +229,55 @@ async function exportPdf() {
             })
         });
         
+        // Check if response is OK before processing
         if (!response.ok) {
-            const data = await response.json();
-            showToast(data.error || 'Error exporting PDF', 'error');
+            // Only parse JSON for error responses
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                const data = await response.json();
+                showToast(data.error || 'Error exporting PDF', 'error');
+            } else {
+                showToast('Error exporting PDF', 'error');
+            }
+            return;
+        }
+        
+        // For successful responses, treat as binary blob
+        const blob = await response.blob();
+        
+        // Verify we got a non-empty blob
+        if (blob.size === 0) {
+            showToast('Received empty PDF from server', 'error');
+            return;
+        }
+        
+        // Verify content type from headers (more reliable than blob.type)
+        const contentType = response.headers.get('content-type');
+        if (contentType && !contentType.includes('application/pdf')) {
+            showToast('Invalid PDF format received', 'error');
             return;
         }
         
         // Download the PDF
-        const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = `${deckName.replace(/\s+/g, '_')}_flashcards.pdf`;
         document.body.appendChild(a);
         a.click();
+        
+        // Clean up
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
         
         showToast('PDF exported successfully!', 'success');
     } catch (error) {
         showToast('Error exporting PDF: ' + error.message, 'error');
+    } finally {
+        // Re-enable button and restore text
+        exportBtn.disabled = false;
+        exportBtn.textContent = originalText;
+        isExportingPdf = false;
     }
 }
 

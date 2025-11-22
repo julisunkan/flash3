@@ -325,13 +325,76 @@ def export_cards_pdf():
     cards = request.json.get('cards', [])
     deck_name = request.json.get('deck_name', 'Flashcards')
     
+    # Validate input
     if not cards or not isinstance(cards, list):
         return jsonify({'error': 'No cards provided'}), 400
+    
+    if len(cards) > 100:
+        return jsonify({'error': 'Cannot export more than 100 cards at once'}), 400
+    
+    if not isinstance(deck_name, str):
+        deck_name = 'Flashcards'
+    
+    # Validate total payload size
+    total_size = len(str(cards))
+    if total_size > 1_000_000:  # 1MB limit for total payload
+        return jsonify({'error': 'Payload too large'}), 400
+    
+    # Validate each card structure
+    for i, card in enumerate(cards):
+        if not isinstance(card, dict):
+            return jsonify({'error': f'Card {i+1} is invalid'}), 400
+        
+        if 'question' not in card or 'answer' not in card:
+            return jsonify({'error': f'Card {i+1} is missing required fields'}), 400
+        
+        if not isinstance(card['question'], str) or not isinstance(card['answer'], str):
+            return jsonify({'error': f'Card {i+1} has invalid field types'}), 400
+        
+        # Trim and validate length
+        question = card['question'].strip()
+        answer = card['answer'].strip()
+        
+        if not question or not answer:
+            return jsonify({'error': f'Card {i+1} has empty question or answer'}), 400
+        
+        if len(question) > 10000 or len(answer) > 10000:
+            return jsonify({'error': f'Card {i+1} fields are too long (max 10,000 characters)'}), 400
+        
+        # Update card with trimmed values
+        card['question'] = question
+        card['answer'] = answer
+        
+        # Validate choices if present
+        if 'choices' in card:
+            if not isinstance(card['choices'], list):
+                return jsonify({'error': f'Card {i+1} has invalid choices format'}), 400
+            
+            if len(card['choices']) > 10:
+                return jsonify({'error': f'Card {i+1} has too many choices (max 10)'}), 400
+            
+            trimmed_choices = []
+            for choice in card['choices']:
+                if not isinstance(choice, str):
+                    return jsonify({'error': f'Card {i+1} has invalid choice format'}), 400
+                
+                trimmed_choice = choice.strip()
+                if not trimmed_choice:
+                    return jsonify({'error': f'Card {i+1} has empty choice'}), 400
+                
+                if len(trimmed_choice) > 5000:
+                    return jsonify({'error': f'Card {i+1} has choice that is too long (max 5,000 characters)'}), 400
+                
+                trimmed_choices.append(trimmed_choice)
+            
+            card['choices'] = trimmed_choices
     
     try:
         pdf_buffer = generate_flashcards_pdf(cards, deck_name)
         
-        filename = f"{deck_name.replace(' ', '_')}_flashcards.pdf"
+        # Sanitize filename
+        safe_filename = "".join(c for c in deck_name if c.isalnum() or c in (' ', '-', '_')).strip()
+        filename = f"{safe_filename or 'Flashcards'}_flashcards.pdf"
         
         return send_file(
             pdf_buffer,
@@ -339,8 +402,10 @@ def export_cards_pdf():
             as_attachment=True,
             download_name=filename
         )
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
     except Exception as e:
-        return jsonify({'error': f'Failed to generate PDF: {str(e)}'}), 500
+        return jsonify({'error': 'Failed to generate PDF. Please try again.'}), 500
 
 @app.route('/deck/<int:deck_id>')
 def deck_page(deck_id):
