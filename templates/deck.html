@@ -96,7 +96,14 @@
                     <div class="card-content">
                         <div class="card-question"><strong>Q:</strong> ${escapeHtml(card.question)}</div>
                         <div class="card-answer"><strong>A:</strong> ${escapeHtml(card.answer)}</div>
-                        ${card.choices ? `<div class="card-choices">Choices: ${JSON.parse(card.choices).join(', ')}</div>` : ''}
+                        ${card.choices ? (() => {
+                            try {
+                                const choices = JSON.parse(card.choices);
+                                return `<div class="card-choices">Choices: ${choices.join(', ')}</div>`;
+                            } catch (e) {
+                                return '';
+                            }
+                        })() : ''}
                     </div>
                     <button onclick="deleteCard(${card.id})" class="delete-card-btn">🗑️</button>
                 </div>
