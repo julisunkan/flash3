@@ -9,6 +9,18 @@ document.addEventListener('DOMContentLoaded', () => {
     loadDecks();
 });
 
+// Reload decks when page becomes visible (e.g., after navigating back)
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+        loadDecks();
+    }
+});
+
+// Reload decks when window gains focus
+window.addEventListener('focus', () => {
+    loadDecks();
+});
+
 function setupTabs() {
     const tabs = document.querySelectorAll('.tab-btn');
     tabs.forEach(tab => {
