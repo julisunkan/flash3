@@ -1,0 +1,39 @@
+mance, Task, and Experience (P, T, E).
+A: Machine Learning algorithms improve their performance (P) at some task (T) through experience (E). A well-defined learning task is specified by this <P, T, E> tuple, encapsulating the learning objective and how it's achieved.
+🗑️
+#2
+Q: Contrast traditional programming with the machine learning paradigm in terms of input and output.
+A: In traditional programming, data and a program are inputs, producing an output. In machine learning, data and the desired output serve as inputs, and the computer learns or infers the program that maps the data to the output.
+🗑️
+#3
+Q: Under what circumstances is Machine Learning most beneficial compared to traditional programming approaches?
+A: Machine Learning excels when human expertise is absent or difficult to articulate, models require personalization, or data volumes are exceedingly large. It is valuable when systems need to adapt and improve automatically based on experience.
+🗑️
+#4
+Q: Explain Arthur Samuel's definition of Machine Learning and its significance.
+A: Arthur Samuel defined Machine Learning as the field of study that gives computers the ability to learn without being explicitly programmed. This definition highlights the core concept of ML: enabling systems to automatically improve through experience rather than relying on pre-defined rules.
+🗑️
+#5
+Q: Outline the key components necessary for designing a successful Machine Learning system.
+A: Designing a successful ML system requires choosing the appropriate training experience, defining the target function to be learned, selecting a suitable representation for the target function, and choosing a learning algorithm to infer the function from the experience. Proper data pre-processing and evaluation are also vital.
+🗑️
+#6
+Q: Differentiate between Supervised, Unsupervised, and Reinforcement Learning paradigms.
+A: Supervised learning uses labeled training data, unsupervised learning uses unlabeled data to find hidden structures, and reinforcement learning learns through trial and error, receiving rewards for actions taken in an environment.
+🗑️
+#7
+Q: Describe the core objective of Supervised Learning, and distinguish between Regression and Classification tasks.
+A: The core objective of supervised learning is to learn a function that maps input features to output labels based on labeled training data. Regression predicts a continuous output variable, while classification predicts a categorical output variable.
+🗑️
+#8
+Q: Explain the purpose and application of Independent Component Analysis (ICA) within the realm of Unsupervised Learning.
+A: ICA, a type of unsupervised learning, aims to separate a combined signal into its original, independent source signals. It is used in applications such as separating audio sources in a recording or identifying underlying factors in multi-dimensional data.
+🗑️
+#9
+Q: Explain the concept of 'i.i.d' in the context of machine learning and why it is an important assumption.
+A: 'i.i.d' stands for 'independent and identically distributed'. It assumes that training and testing examples are drawn from the same overall data distribution. This is crucial for ensuring that a model trained on the training data generalizes well to unseen test data.
+🗑️
+#10
+Q: Identify the three essential components that are common to almost all Machine Learning algorithms.
+A: Nearly all Machine Learning algorithms share three core components: Representation (how the knowledge is structured), Optimization (how the best solution is found), and Evaluation (how the solution's quality is measured).
+🗑️
