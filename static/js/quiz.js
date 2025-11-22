@@ -44,17 +44,31 @@ function showQuestion(index) {
     const openAnswer = document.getElementById('openAnswer');
     
     if (card.choices) {
-        const choices = JSON.parse(card.choices);
-        const shuffledChoices = shuffleArray([...choices]);
-        
-        mcqChoices.innerHTML = shuffledChoices.map((choice, i) => `
-            <button class="choice-btn" onclick="selectChoice('${escapeHtml(choice)}', '${escapeHtml(card.answer)}')" data-choice="${escapeHtml(choice)}">
-                ${String.fromCharCode(65 + i)}) ${escapeHtml(choice)}
-            </button>
-        `).join('');
-        
-        mcqChoices.classList.remove('hidden');
-        openAnswer.classList.add('hidden');
+        try {
+            const choices = JSON.parse(card.choices);
+            
+            // Validate that choices is an array
+            if (!Array.isArray(choices) || choices.length === 0) {
+                throw new Error('Invalid choices format');
+            }
+            
+            const shuffledChoices = shuffleArray([...choices]);
+            
+            mcqChoices.innerHTML = shuffledChoices.map((choice, i) => `
+                <button class="choice-btn" onclick="selectChoice('${escapeHtml(choice)}', '${escapeHtml(card.answer)}')" data-choice="${escapeHtml(choice)}">
+                    ${String.fromCharCode(65 + i)}) ${escapeHtml(choice)}
+                </button>
+            `).join('');
+            
+            mcqChoices.classList.remove('hidden');
+            openAnswer.classList.add('hidden');
+        } catch (e) {
+            // If choices parsing fails, treat as open answer question
+            console.warn('Invalid choices format for card:', card.id, e);
+            document.getElementById('userAnswer').value = '';
+            openAnswer.classList.remove('hidden');
+            mcqChoices.classList.add('hidden');
+        }
     } else {
         document.getElementById('userAnswer').value = '';
         openAnswer.classList.remove('hidden');
