@@ -11,10 +11,18 @@ if GEMINI_API_KEY:
 else:
     model = None
 
-def generate_summary(text, max_words=200):
+def generate_summary(text, max_words=200, user_api_key=None):
     """Generate a concise summary using Gemini API"""
-    if not model:
-        return "Please set GEMINI_API_KEY environment variable to use AI generation."
+    current_model = model
+    
+    if user_api_key:
+        try:
+            genai.configure(api_key=user_api_key)
+            current_model = genai.GenerativeModel('gemini-1.5-flash')
+        except Exception as e:
+            return f"Error with provided API key: {str(e)}"
+    elif not model:
+        return "Please configure your Gemini API key in Settings to use AI generation."
 
     try:
         prompt = f"""Please provide a concise summary of the following text in approximately {max_words} words:
@@ -23,17 +31,34 @@ def generate_summary(text, max_words=200):
 
 Summary:"""
 
-        response = model.generate_content(prompt)
+        response = current_model.generate_content(prompt)
+        
+        if GEMINI_API_KEY and user_api_key:
+            genai.configure(api_key=GEMINI_API_KEY)
+        
         return response.text.strip()
     except Exception as e:
+        if GEMINI_API_KEY and user_api_key:
+            genai.configure(api_key=GEMINI_API_KEY)
         return f"Error generating summary: {str(e)}"
 
-def generate_flashcards(text, num_cards=10):
+def generate_flashcards(text, num_cards=10, user_api_key=None):
     """Generate question-answer flashcards using Gemini API"""
-    if not model:
+    current_model = model
+    
+    if user_api_key:
+        try:
+            genai.configure(api_key=user_api_key)
+            current_model = genai.GenerativeModel('gemini-1.5-flash')
+        except Exception as e:
+            return [{
+                'question': 'API Key Error',
+                'answer': f'Error with provided API key: {str(e)}'
+            }]
+    elif not model:
         return [{
             'question': 'API Key Required',
-            'answer': 'Please set GEMINI_API_KEY environment variable to use AI generation.'
+            'answer': 'Please configure your Gemini API key in Settings to use AI generation.'
         }]
 
     try:
@@ -70,21 +95,38 @@ Generate exactly {num_cards} flashcards. Make sure questions are specific and an
             if not isinstance(card, dict) or 'question' not in card or 'answer' not in card:
                 raise ValueError("Invalid flashcard format")
 
+        if GEMINI_API_KEY and user_api_key:
+            genai.configure(api_key=GEMINI_API_KEY)
+        
         return flashcards[:num_cards]
 
     except Exception as e:
+        if GEMINI_API_KEY and user_api_key:
+            genai.configure(api_key=GEMINI_API_KEY)
         return [{
             'question': 'Error generating flashcards',
             'answer': f'Please try again. Error: {str(e)}'
         }]
 
-def generate_multiple_choice(text, num_questions=5):
+def generate_multiple_choice(text, num_questions=5, user_api_key=None):
     """Generate multiple choice questions using Gemini API"""
-    if not model:
+    current_model = model
+    
+    if user_api_key:
+        try:
+            genai.configure(api_key=user_api_key)
+            current_model = genai.GenerativeModel('gemini-1.5-flash')
+        except Exception as e:
+            return [{
+                'question': 'API Key Error',
+                'choices': ['Check your API key', 'In Settings', 'Try again', 'Visit Google AI Studio'],
+                'answer': 'Check your API key'
+            }]
+    elif not model:
         return [{
             'question': 'API Key Required',
-            'choices': ['Set GEMINI_API_KEY', 'In environment variables', 'To use this feature', 'Check the Secrets tool'],
-            'answer': 'Set GEMINI_API_KEY'
+            'choices': ['Go to Settings', 'Add your Gemini API key', 'Get free key from Google', 'Try again'],
+            'answer': 'Go to Settings'
         }]
 
     try:
@@ -126,11 +168,16 @@ Generate exactly {num_questions} questions. Make sure the correct answer is one 
             if not isinstance(q['choices'], list) or len(q['choices']) < 2:
                 raise ValueError("Invalid choices format")
 
+        if GEMINI_API_KEY and user_api_key:
+            genai.configure(api_key=GEMINI_API_KEY)
+        
         return questions[:num_questions]
 
     except Exception as e:
+        if GEMINI_API_KEY and user_api_key:
+            genai.configure(api_key=GEMINI_API_KEY)
         return [{
             'question': 'Error generating questions',
-            'choices': ['Try again', 'Check API key', 'Verify text input', 'Contact support'],
+            'choices': ['Try again', 'Check API key', 'Verify text input', 'Visit Settings'],
             'answer': 'Try again'
         }]

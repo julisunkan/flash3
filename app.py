@@ -101,18 +101,20 @@ def process_text():
         return jsonify({'error': 'Text too short. Please provide at least 50 characters.'}), 400
     
     try:
+        user_api_key = data.get('api_key')
+        
         if action == 'summary':
-            result = generate_summary(text)
+            result = generate_summary(text, user_api_key=user_api_key)
             return jsonify({'summary': result})
         
         elif action == 'flashcards':
             num_cards = min(int(data.get('num_cards', 10)), 50)
-            flashcards = generate_flashcards(text, num_cards)
+            flashcards = generate_flashcards(text, num_cards, user_api_key=user_api_key)
             return jsonify({'flashcards': flashcards})
         
         elif action == 'multiple_choice':
             num_questions = min(int(data.get('num_questions', 5)), 25)
-            questions = generate_multiple_choice(text, num_questions)
+            questions = generate_multiple_choice(text, num_questions, user_api_key=user_api_key)
             return jsonify({'questions': questions})
         
         else:
@@ -147,6 +149,35 @@ def upload_pdf():
         if not os.path.exists(filepath) or os.path.getsize(filepath) == 0:
             return jsonify({'error': 'File upload failed'}), 500
         
+
+
+@app.route('/api/test-gemini', methods=['POST'])
+def test_gemini():
+    if not request.json:
+        return jsonify({'error': 'Invalid request'}), 400
+    
+    api_key = request.json.get('api_key')
+    
+    if not api_key:
+        return jsonify({'error': 'No API key provided'}), 400
+    
+    try:
+        import google.generativeai as genai
+        genai.configure(api_key=api_key)
+        test_model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        response = test_model.generate_content("Say hello")
+        
+        if GEMINI_API_KEY:
+            genai.configure(api_key=GEMINI_API_KEY)
+        
+        return jsonify({'message': 'API key is valid', 'test_response': response.text})
+    except Exception as e:
+        if GEMINI_API_KEY:
+            genai.configure(api_key=GEMINI_API_KEY)
+        return jsonify({'error': f'API key test failed: {str(e)}'}), 400
+
+
         if os.path.getsize(filepath) > 16 * 1024 * 1024:
             os.remove(filepath)
             return jsonify({'error': 'File too large'}), 400
@@ -192,6 +223,13 @@ def study_card(card_id):
 
 @app.route('/api/decks/<int:deck_id>/due-cards', methods=['GET'])
 def get_due_cards(deck_id):
+
+
+@app.route('/settings')
+def settings_page():
+    return render_template('settings.html')
+
+
     cards = Card.get_due_cards(deck_id)
     return jsonify(cards)
 

@@ -501,8 +501,141 @@ textarea:focus {
 
 .empty-state {
     text-align: center;
-    padding: 60px 20px;
-    color: var(--text-light);
+    padding: 3rem;
+    color: #64748b;
+}
+
+.settings-section {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.settings-card {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.settings-card h3 {
+    margin-top: 0;
+    color: #1e293b;
+}
+
+.help-link {
+    display: inline-block;
+    margin: 1rem 0;
+    color: #6366f1;
+    text-decoration: none;
+}
+
+.help-link:hover {
+    text-decoration: underline;
+}
+
+.api-key-input {
+    display: flex;
+    gap: 0.5rem;
+    margin: 1rem 0;
+}
+
+.api-input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.toggle-btn {
+    padding: 0.75rem 1rem;
+    background: #f1f5f9;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.toggle-btn:hover {
+    background: #e2e8f0;
+}
+
+.api-status {
+    margin: 1rem 0;
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.status-success {
+    color: #059669;
+}
+
+.status-warning {
+    color: #d97706;
+}
+
+.status-error {
+    color: #dc2626;
+}
+
+.button-group {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+}
+
+.secondary-btn {
+    padding: 0.75rem 1.5rem;
+    background: #f1f5f9;
+    color: #475569;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.secondary-btn:hover {
+    background: #e2e8f0;
+}
+
+.danger-btn {
+    padding: 0.75rem 1.5rem;
+    background: #fee2e2;
+    color: #dc2626;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.danger-btn:hover {
+    background: #fecaca;
+}
+
+.info-card {
+    background: #f0f9ff;
+    border: 2px solid #bae6fd;
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.info-card h3 {
+    margin-top: 0;
+    color: #0c4a6e;
+}
+
+.info-card ul {
+    margin: 0;
+    padding-left: 1.5rem;
+    color: #075985;
+}
+
+.info-card li {
+    margin: 0.5rem 0;
 }
 
 .flashcard {
@@ -884,27 +1017,27 @@ textarea:focus {
     header h1 {
         font-size: 1.8rem;
     }
-    
+
     .controls {
         flex-direction: column;
     }
-    
+
     .deck-input, .num-input {
         width: 100%;
     }
-    
+
     .generation-options {
         flex-direction: column;
     }
-    
+
     .decks-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .card-text {
         font-size: 1.2rem;
     }
-    
+
     .rating-buttons {
         display: flex;
         flex-direction: column;

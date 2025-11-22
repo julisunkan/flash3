@@ -1,0 +1,67 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#6366f1">
+    <title>Settings - AI Flashcard Generator</title>
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚙️ Settings</h1>
+            <nav>
+                <button onclick="location.href='/'" class="nav-btn">🏠 Home</button>
+            </nav>
+        </header>
+
+        <main>
+            <section class="settings-section">
+                <h2>API Configuration</h2>
+                <div class="settings-card">
+                    <h3>Gemini API Key</h3>
+                    <p>Enter your Google Gemini API key to enable AI-powered flashcard generation.</p>
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" class="help-link">
+                        📖 Get your free API key here
+                    </a>
+                    
+                    <div class="api-key-input">
+                        <input 
+                            type="password" 
+                            id="apiKeyInput" 
+                            placeholder="Enter your Gemini API key"
+                            class="api-input"
+                        >
+                        <button onclick="toggleApiKeyVisibility()" class="toggle-btn">👁️</button>
+                    </div>
+                    
+                    <div class="api-status" id="apiStatus"></div>
+                    
+                    <div class="button-group">
+                        <button onclick="saveApiKey()" class="primary-btn">💾 Save API Key</button>
+                        <button onclick="testApiKey()" class="secondary-btn">🧪 Test Connection</button>
+                        <button onclick="clearApiKey()" class="danger-btn">🗑️ Clear Key</button>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <h3>ℹ️ About API Keys</h3>
+                    <ul>
+                        <li>Your API key is stored securely in your browser's local storage</li>
+                        <li>It is never sent to our servers or stored in our database</li>
+                        <li>Google Gemini offers a free tier with generous limits</li>
+                        <li>The key is used only to generate flashcards from your content</li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+
+        <div id="toast" class="toast hidden"></div>
+    </div>
+
+    <script src="/static/js/settings.js"></script>
+</body>
+</html>

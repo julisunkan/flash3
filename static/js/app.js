@@ -90,6 +90,8 @@ async function generateContent() {
     document.getElementById('cardsPreview').classList.add('hidden');
     
     try {
+        const apiKey = localStorage.getItem('gemini_api_key');
+        
         const response = await fetch('/api/process-text', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -97,7 +99,8 @@ async function generateContent() {
                 text: text,
                 action: genType,
                 num_cards: numCards,
-                num_questions: numCards
+                num_questions: numCards,
+                api_key: apiKey
             })
         });
         
