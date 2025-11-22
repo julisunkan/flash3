@@ -123,8 +123,58 @@
             `).join('');
         }
 
+        let pendingDeleteCardId = null;
+
         async function deleteCard(cardId) {
-            if (!confirm('Delete this flashcard?')) return;
+            // Show inline confirmation message
+            const container = document.querySelector('main') || document.body;
+            
+            // Remove existing confirmation messages
+            const existingConfirm = container.querySelectorAll('.inline-message.confirm');
+            existingConfirm.forEach(msg => msg.remove());
+            
+            pendingDeleteCardId = cardId;
+            
+            // Create confirmation message
+            const confirmDiv = document.createElement('div');
+            confirmDiv.className = 'inline-message confirm warning';
+            confirmDiv.innerHTML = `
+                <span style="font-size: 1.2rem;">⚠</span>
+                <span>Delete this flashcard?</span>
+                <div style="display: flex; gap: 10px; margin-left: auto;">
+                    <button onclick="cancelDeleteCard()" style="padding: 6px 16px; background: #6b7280; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Cancel</button>
+                    <button onclick="confirmDeleteCard()" style="padding: 6px 16px; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Delete</button>
+                </div>
+            `;
+            
+            // Insert at the top of the container
+            container.insertBefore(confirmDiv, container.firstChild);
+            
+            // Scroll to top to show the message
+            container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function cancelDeleteCard() {
+            pendingDeleteCardId = null;
+            const container = document.querySelector('main') || document.body;
+            const confirmMsg = container.querySelector('.inline-message.confirm');
+            if (confirmMsg) {
+                confirmMsg.style.opacity = '0';
+                confirmMsg.style.transform = 'translateY(-10px)';
+                setTimeout(() => confirmMsg.remove(), 300);
+            }
+        }
+
+        async function confirmDeleteCard() {
+            if (!pendingDeleteCardId) return;
+            
+            const cardId = pendingDeleteCardId;
+            pendingDeleteCardId = null;
+            
+            // Remove confirmation message
+            const container = document.querySelector('main') || document.body;
+            const confirmMsg = container.querySelector('.inline-message.confirm');
+            if (confirmMsg) confirmMsg.remove();
             
             try {
                 await fetch(`/api/cards/${cardId}`, { method: 'DELETE' });

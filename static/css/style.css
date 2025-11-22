@@ -1621,6 +1621,15 @@ textarea:focus {
     animation: warning-pulse 1.5s infinite;
 }
 
+/* Inline message confirmation variant */
+.inline-message.confirm {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
 @keyframes warning-pulse {
     0%, 100% { 
         transform: scale(1);
