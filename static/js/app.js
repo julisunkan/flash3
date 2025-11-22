@@ -131,12 +131,17 @@ async function generateContent() {
 function displayCardsPreview(cards) {
     const container = document.getElementById('cardsContainer');
     
+    if (!cards || !Array.isArray(cards) || cards.length === 0) {
+        container.innerHTML = '<p class="empty-state">No cards generated. Please try again.</p>';
+        return;
+    }
+    
     container.innerHTML = cards.map((card, index) => `
         <div class="card-preview">
             <strong>#${index + 1}</strong><br>
-            <strong>Q:</strong> ${escapeHtml(card.question)}<br>
-            <strong>A:</strong> ${escapeHtml(card.answer)}
-            ${card.choices ? `<br><strong>Choices:</strong> ${card.choices.map(escapeHtml).join(', ')}` : ''}
+            <strong>Q:</strong> ${escapeHtml(card.question || 'No question')}<br>
+            <strong>A:</strong> ${escapeHtml(card.answer || 'No answer')}
+            ${card.choices && Array.isArray(card.choices) ? `<br><strong>Choices:</strong> ${card.choices.map(escapeHtml).join(', ')}` : ''}
         </div>
     `).join('');
     
