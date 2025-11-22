@@ -62,18 +62,26 @@ def generate_flashcards(text, num_cards=10, user_api_key=None):
         }]
 
     try:
-        prompt = f"""Generate {num_cards} high-quality flashcards from the following text. Each flashcard should have a clear question and a concise answer.
+        prompt = f"""You are an expert educational content creator. Generate {num_cards} professional, high-quality flashcards from the following text.
+
+Requirements:
+- Each question should be clear, specific, and test understanding of key concepts
+- Questions should be properly formatted and grammatically correct
+- Answers should be concise yet comprehensive (2-4 sentences maximum)
+- Focus on the most important information and concepts
+- Use professional academic language
+- Ensure questions and answers are clearly separated
 
 Text:
 {text}
 
 Return the flashcards in the following JSON format:
 [
-  {{"question": "Question text here?", "answer": "Answer text here"}},
-  {{"question": "Another question?", "answer": "Another answer"}}
+  {{"question": "What is the primary function of X?", "answer": "The primary function of X is to perform Y, which enables Z."}},
+  {{"question": "How does A relate to B?", "answer": "A relates to B through the process of C, resulting in D."}}
 ]
 
-Generate exactly {num_cards} flashcards. Make sure questions are specific and answers are informative but concise."""
+Generate exactly {num_cards} flashcards. Make each question thought-provoking and each answer informative."""
 
         response = current_model.generate_content(prompt)
         result_text = response.text.strip()
@@ -130,7 +138,17 @@ def generate_multiple_choice(text, num_questions=5, user_api_key=None):
         }]
 
     try:
-        prompt = f"""Generate {num_questions} multiple choice questions from the following text. Each question should have 4 choices with one correct answer.
+        prompt = f"""You are an expert educational assessment designer. Create {num_questions} professional, high-quality multiple choice questions from the following text.
+
+Requirements:
+- Each question should test comprehension and critical thinking
+- Questions must be clear, specific, and professionally written
+- Provide exactly 4 answer choices for each question (A, B, C, D)
+- The correct answer should be accurate and clearly supported by the text
+- Incorrect choices (distractors) should be plausible but clearly wrong
+- Avoid obvious patterns or giveaways
+- Use professional academic language
+- Ensure proper grammar and formatting
 
 Text:
 {text}
@@ -138,13 +156,18 @@ Text:
 Return the questions in the following JSON format:
 [
   {{
-    "question": "Question text here?",
-    "choices": ["Choice A", "Choice B", "Choice C", "Choice D"],
-    "answer": "Choice A"
+    "question": "What is the primary mechanism by which X achieves Y?",
+    "choices": [
+      "Through process A which involves detailed mechanism",
+      "By utilizing method B in a specific way",
+      "Via pathway C that connects to system D",
+      "Using technique E combined with factor F"
+    ],
+    "answer": "Through process A which involves detailed mechanism"
   }}
 ]
 
-Generate exactly {num_questions} questions. Make sure the correct answer is one of the choices."""
+Generate exactly {num_questions} questions. Ensure all choices are substantive and the correct answer is one of the four choices provided."""
 
         response = current_model.generate_content(prompt)
         result_text = response.text.strip()
