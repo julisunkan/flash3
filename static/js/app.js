@@ -301,11 +301,16 @@ async function saveCards() {
             body: JSON.stringify({ name: deckName })
         });
         
+        if (!deckResponse.ok) {
+            throw new Error('Failed to create deck');
+        }
+        
         const deckData = await deckResponse.json();
         const deckId = deckData.id;
         
+        let savedCount = 0;
         for (const card of generatedCards) {
-            await fetch(`/api/decks/${deckId}/cards`, {
+            const cardResponse = await fetch(`/api/decks/${deckId}/cards`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -314,9 +319,13 @@ async function saveCards() {
                     choices: card.choices || null
                 })
             });
+            
+            if (cardResponse.ok) {
+                savedCount++;
+            }
         }
         
-        showToast(`Deck "${deckName}" created with ${generatedCards.length} cards!`, 'success');
+        showToast(`Deck "${deckName}" created with ${savedCount} cards!`, 'success');
         
         document.getElementById('textInput').value = '';
         document.getElementById('deckName').value = '';
@@ -324,7 +333,12 @@ async function saveCards() {
         extractedText = '';
         generatedCards = [];
         
-        loadDecks();
+        await loadDecks();
+        
+        // Navigate to the newly created deck
+        setTimeout(() => {
+            location.href = `/deck/${deckId}`;
+        }, 1000);
     } catch (error) {
         showToast('Error saving cards: ' + error.message, 'error');
     }
