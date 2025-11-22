@@ -149,9 +149,7 @@ def upload_pdf():
         if not os.path.exists(filepath) or os.path.getsize(filepath) == 0:
             return jsonify({'error': 'File upload failed'}), 500
         
-
-
-if os.path.getsize(filepath) > 16 * 1024 * 1024:
+        if os.path.getsize(filepath) > 16 * 1024 * 1024:
             os.remove(filepath)
             return jsonify({'error': 'File too large'}), 400
         
@@ -226,15 +224,12 @@ def study_card(card_id):
 
 @app.route('/api/decks/<int:deck_id>/due-cards', methods=['GET'])
 def get_due_cards(deck_id):
-
+    cards = Card.get_due_cards(deck_id)
+    return jsonify(cards)
 
 @app.route('/settings')
 def settings_page():
     return render_template('settings.html')
-
-
-    cards = Card.get_due_cards(deck_id)
-    return jsonify(cards)
 
 @app.route('/api/quiz-results', methods=['POST'])
 def save_quiz_result():

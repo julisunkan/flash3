@@ -8,3 +8,12 @@ python-dotenv==1.0.0
 requests
 google-generativeai
 google-generativeai
+Flask
+google-generativeai
+pdfplumber
+Pillow
+PyPDF2
+pytesseract
+python-dotenv
+requests
+Werkzeug
