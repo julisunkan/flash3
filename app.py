@@ -282,12 +282,25 @@ def export_deck(deck_id, format):
     if not deck:
         return jsonify({'error': 'Deck not found'}), 404
     
+    # Sanitize filename
+    safe_deck_name = "".join(c for c in deck['name'] if c.isalnum() or c in (' ', '-', '_')).strip()
+    
     if format == 'json':
         data = {
             'deck': deck,
             'cards': cards
         }
-        return jsonify(data)
+        from flask import Response
+        import json as json_lib
+        
+        response = Response(
+            json_lib.dumps(data, indent=2),
+            mimetype='application/json',
+            headers={
+                'Content-Disposition': f'attachment; filename={safe_deck_name or "deck"}.json'
+            }
+        )
+        return response
     
     elif format == 'csv':
         output = StringIO()
@@ -300,7 +313,7 @@ def export_deck(deck_id, format):
         output.seek(0)
         return output.getvalue(), 200, {
             'Content-Type': 'text/csv',
-            'Content-Disposition': f'attachment; filename={deck["name"]}.csv'
+            'Content-Disposition': f'attachment; filename={safe_deck_name or "deck"}.csv'
         }
     
     elif format == 'anki':
@@ -311,8 +324,35 @@ def export_deck(deck_id, format):
         output.seek(0)
         return output.getvalue(), 200, {
             'Content-Type': 'text/plain',
-            'Content-Disposition': f'attachment; filename={deck["name"]}_anki.txt'
+            'Content-Disposition': f'attachment; filename={safe_deck_name or "deck"}_anki.txt'
         }
+    
+    elif format == 'pdf':
+        # Convert cards to the format expected by PDF generator
+        pdf_cards = []
+        for card in cards:
+            pdf_card = {
+                'question': card['question'],
+                'answer': card['answer']
+            }
+            if card.get('choices'):
+                try:
+                    pdf_card['choices'] = json.loads(card['choices'])
+                except:
+                    pass
+            pdf_cards.append(pdf_card)
+        
+        try:
+            pdf_buffer = generate_flashcards_pdf(pdf_cards, deck['name'])
+            
+            return send_file(
+                pdf_buffer,
+                mimetype='application/pdf',
+                as_attachment=True,
+                download_name=f"{safe_deck_name or 'deck'}_flashcards.pdf"
+            )
+        except Exception as e:
+            return jsonify({'error': 'Failed to generate PDF'}), 500
     
     return jsonify({'error': 'Invalid format'}), 400
 

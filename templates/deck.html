@@ -26,6 +26,7 @@
                 <button onclick="exportDeck('json')" class="action-btn">📥 Export JSON</button>
                 <button onclick="exportDeck('csv')" class="action-btn">📥 Export CSV</button>
                 <button onclick="exportDeck('anki')" class="action-btn">📥 Export Anki</button>
+                <button onclick="exportDeck('pdf')" class="action-btn">📄 Export PDF</button>
                 <button onclick="deleteDeck()" class="action-btn delete-btn">🗑️ Delete Deck</button>
             </div>
 
@@ -123,7 +124,45 @@
         }
 
         async function exportDeck(format) {
-            window.location.href = `/api/export/${DECK_ID}/${format}`;
+            try {
+                showToast(`Exporting deck as ${format.toUpperCase()}...`, 'info');
+                
+                const response = await fetch(`/api/export/${DECK_ID}/${format}`);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    showToast(errorData.error || 'Export failed', 'error');
+                    return;
+                }
+                
+                // Get filename from Content-Disposition header or use default
+                const contentDisposition = response.headers.get('Content-Disposition');
+                let filename = `deck_${DECK_ID}.${format}`;
+                
+                if (contentDisposition) {
+                    const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                    if (filenameMatch && filenameMatch[1]) {
+                        filename = filenameMatch[1].replace(/['"]/g, '');
+                    }
+                }
+                
+                // Download the file
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                
+                // Clean up
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                showToast(`Deck exported as ${format.toUpperCase()} successfully!`, 'success');
+            } catch (error) {
+                showToast('Error exporting deck: ' + error.message, 'error');
+            }
         }
 
         async function deleteDeck() {
