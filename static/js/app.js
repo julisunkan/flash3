@@ -21,6 +21,14 @@ window.addEventListener('focus', () => {
     loadDecks();
 });
 
+// Reload decks when navigating back using browser history
+window.addEventListener('pageshow', (event) => {
+    // If page is restored from bfcache, reload decks
+    if (event.persisted) {
+        loadDecks();
+    }
+});
+
 function setupTabs() {
     const tabs = document.querySelectorAll('.tab-btn');
     tabs.forEach(tab => {
@@ -358,7 +366,10 @@ async function saveCards() {
 
 async function loadDecks() {
     try {
-        const response = await fetch('/api/decks');
+        // Add cache busting parameter to force fresh data
+        const response = await fetch('/api/decks?_t=' + Date.now(), {
+            cache: 'no-store'
+        });
         const decks = await response.json();
         
         const container = document.getElementById('decksList');
