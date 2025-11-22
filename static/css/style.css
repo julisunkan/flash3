@@ -1228,68 +1228,78 @@ textarea:focus {
     bottom: 0;
     left: 0;
     right: 0;
-    background: white;
+    background: linear-gradient(to top, #ffffff, #fafbfc);
     border-top: 1px solid var(--border);
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
     z-index: 1000;
     display: flex;
-    justify-content: space-around;
+    justify-content: center;
     align-items: center;
-    padding: 8px 0;
-    height: 65px;
+    padding: 12px 20px;
+    gap: 12px;
 }
 
 .nav-item {
     flex: 1;
+    max-width: 200px;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
+    gap: 8px;
     text-decoration: none;
     color: var(--text-light);
     cursor: pointer;
-    transition: all 0.3s ease;
-    padding: 8px;
-    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 12px 16px;
+    background: white;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    font-weight: 500;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .nav-item:hover {
     color: var(--primary);
+    border-color: var(--primary);
+    background: rgba(99, 102, 241, 0.05);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
 }
 
 .nav-item.active {
-    color: var(--primary);
+    color: white;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
-.nav-item.active::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 40px;
-    height: 3px;
-    background: var(--primary);
-    border-radius: 0 0 3px 3px;
+.nav-item:active {
+    transform: translateY(0);
 }
 
 .nav-icon {
-    font-size: 1.5rem;
-    margin-bottom: 4px;
+    font-size: 1.3rem;
     transition: transform 0.3s ease;
 }
 
-.nav-item:active .nav-icon {
-    transform: scale(0.9);
-}
-
-.nav-item.active .nav-icon {
+.nav-item:hover .nav-icon {
     transform: scale(1.1);
 }
 
+.nav-item.active .nav-icon {
+    animation: bounce 0.5s ease;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+}
+
 .nav-label {
-    font-size: 0.75rem;
-    font-weight: 500;
+    font-size: 0.875rem;
+    font-weight: 600;
+    white-space: nowrap;
 }
 
 /* Add padding to body to prevent content from being hidden behind bottom nav */
