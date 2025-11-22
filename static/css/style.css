@@ -1062,6 +1062,76 @@ textarea:focus {
     max-width: 600px;
 }
 
+.stats-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #1e293b;
+}
+
+.stat-label {
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.badges-section {
+    margin: 2rem 0;
+}
+
+.badges-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.badge-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.badge-icon {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+}
+
+.badge-name {
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+}
+
+.badge-date {
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.quiz-history {
+    margin: 2rem 0;
+}
+
 .flashcard-inner {
     position: relative;
     width: 100%;

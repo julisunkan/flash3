@@ -199,6 +199,7 @@ class Card:
         cursor = conn.cursor()
         cursor.execute('DELETE FROM cards WHERE id = ?', (card_id,))
         conn.commit()
+        conn.close()ommit()
         conn.close()
 
 class StudySession:
@@ -253,7 +254,7 @@ class StudySession:
         return {
             'total_studied': total_studied,
             'due_today': due_today,
-            'average_retention': round(avg_ef, 2)
+            'average_retention': round(avg_ef, 2): round(avg_ef, 2)
         }
 
 class QuizResult:

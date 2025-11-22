@@ -62,8 +62,56 @@ async function testApiKey() {
     }
 }
 
+let pendingClearApiKey = false;
+
 function clearApiKey() {
-    if (!confirm('Are you sure you want to clear your API key?')) return;
+    const container = document.querySelector('.settings-section') || document.querySelector('main');
+    
+    // Remove existing confirmation messages
+    const existingConfirm = container.querySelectorAll('.inline-message.confirm');
+    existingConfirm.forEach(msg => msg.remove());
+    
+    pendingClearApiKey = true;
+    
+    // Create confirmation message
+    const confirmDiv = document.createElement('div');
+    confirmDiv.className = 'inline-message confirm warning';
+    confirmDiv.innerHTML = `
+        <span style="font-size: 1.2rem;">⚠</span>
+        <span>Are you sure you want to clear your API key?</span>
+        <div style="display: flex; gap: 10px; margin-left: auto;">
+            <button onclick="cancelClearApiKey()" style="padding: 6px 16px; background: #6b7280; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Cancel</button>
+            <button onclick="confirmClearApiKey()" style="padding: 6px 16px; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Clear</button>
+        </div>
+    `;
+    
+    // Insert at the top of the container
+    container.insertBefore(confirmDiv, container.firstChild);
+    
+    // Scroll to top to show the message
+    container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function cancelClearApiKey() {
+    pendingClearApiKey = false;
+    const container = document.querySelector('.settings-section') || document.querySelector('main');
+    const confirmMsg = container.querySelector('.inline-message.confirm');
+    if (confirmMsg) {
+        confirmMsg.style.opacity = '0';
+        confirmMsg.style.transform = 'translateY(-10px)';
+        setTimeout(() => confirmMsg.remove(), 300);
+    }
+}
+
+function confirmClearApiKey() {
+    if (!pendingClearApiKey) return;
+    
+    pendingClearApiKey = false;
+    
+    // Remove confirmation message
+    const container = document.querySelector('.settings-section') || document.querySelector('main');
+    const confirmMsg = container.querySelector('.inline-message.confirm');
+    if (confirmMsg) confirmMsg.remove();
     
     localStorage.removeItem('gemini_api_key');
     document.getElementById('apiKeyInput').value = '';
