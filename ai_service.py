@@ -75,7 +75,7 @@ Return the flashcards in the following JSON format:
 
 Generate exactly {num_cards} flashcards. Make sure questions are specific and answers are informative but concise."""
 
-        response = model.generate_content(prompt)
+        response = current_model.generate_content(prompt)
         result_text = response.text.strip()
 
         # Extract JSON from response (remove markdown code blocks if present)
@@ -146,7 +146,7 @@ Return the questions in the following JSON format:
 
 Generate exactly {num_questions} questions. Make sure the correct answer is one of the choices."""
 
-        response = model.generate_content(prompt)
+        response = current_model.generate_content(prompt)
         result_text = response.text.strip()
 
         # Extract JSON from response
