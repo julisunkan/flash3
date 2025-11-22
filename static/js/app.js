@@ -98,15 +98,26 @@ async function generateContent() {
         
         const data = await response.json();
         
+        if (!response.ok) {
+            showToast(data.error || 'Error generating content', 'error');
+            return;
+        }
+        
         if (genType === 'summary') {
-            document.getElementById('summaryContent').textContent = data.summary;
-            document.getElementById('summaryResult').classList.remove('hidden');
+            if (data.summary) {
+                document.getElementById('summaryContent').textContent = data.summary;
+                document.getElementById('summaryResult').classList.remove('hidden');
+            }
         } else if (genType === 'flashcards') {
-            generatedCards = data.flashcards;
-            displayCardsPreview(generatedCards);
+            if (data.flashcards && Array.isArray(data.flashcards)) {
+                generatedCards = data.flashcards;
+                displayCardsPreview(generatedCards);
+            }
         } else if (genType === 'multiple_choice') {
-            generatedCards = data.questions;
-            displayCardsPreview(generatedCards);
+            if (data.questions && Array.isArray(data.questions)) {
+                generatedCards = data.questions;
+                displayCardsPreview(generatedCards);
+            }
         }
         
         showToast('Content generated successfully!', 'success');
