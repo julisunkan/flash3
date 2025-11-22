@@ -7,7 +7,7 @@ GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
 
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-pro')
 else:
     model = None
 
@@ -18,7 +18,7 @@ def generate_summary(text, max_words=200, user_api_key=None):
     if user_api_key:
         try:
             genai.configure(api_key=user_api_key)
-            current_model = genai.GenerativeModel('gemini-1.5-flash')
+            current_model = genai.GenerativeModel('gemini-pro')
         except Exception as e:
             return f"Error with provided API key: {str(e)}"
     elif not model:
@@ -49,7 +49,7 @@ def generate_flashcards(text, num_cards=10, user_api_key=None):
     if user_api_key:
         try:
             genai.configure(api_key=user_api_key)
-            current_model = genai.GenerativeModel('gemini-1.5-flash')
+            current_model = genai.GenerativeModel('gemini-pro')
         except Exception as e:
             return [{
                 'question': 'API Key Error',
@@ -115,7 +115,7 @@ def generate_multiple_choice(text, num_questions=5, user_api_key=None):
     if user_api_key:
         try:
             genai.configure(api_key=user_api_key)
-            current_model = genai.GenerativeModel('gemini-1.5-flash')
+            current_model = genai.GenerativeModel('gemini-pro')
         except Exception as e:
             return [{
                 'question': 'API Key Error',

@@ -182,7 +182,7 @@ def test_gemini():
         GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
         
         genai.configure(api_key=api_key)
-        test_model = genai.GenerativeModel('gemini-1.5-flash')
+        test_model = genai.GenerativeModel('gemini-pro')
         
         response = test_model.generate_content("Say hello")
         
