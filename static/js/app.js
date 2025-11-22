@@ -113,7 +113,11 @@ async function generateContent() {
         
         if (genType === 'summary') {
             if (data.summary) {
-                document.getElementById('summaryContent').textContent = data.summary;
+                // Format summary with paragraphs
+                const formattedSummary = data.summary.split('\n\n').map(para => 
+                    `<p class="summary-paragraph">${escapeHtml(para)}</p>`
+                ).join('');
+                document.getElementById('summaryContent').innerHTML = formattedSummary;
                 document.getElementById('summaryResult').classList.remove('hidden');
             }
         } else if (genType === 'flashcards') {
@@ -144,14 +148,47 @@ function displayCardsPreview(cards) {
         return;
     }
     
-    container.innerHTML = cards.map((card, index) => `
-        <div class="card-preview">
-            <strong>#${index + 1}</strong><br>
-            <strong>Q:</strong> ${escapeHtml(card.question || 'No question')}<br>
-            <strong>A:</strong> ${escapeHtml(card.answer || 'No answer')}
-            ${card.choices && Array.isArray(card.choices) ? `<br><strong>Choices:</strong> ${card.choices.map(escapeHtml).join(', ')}` : ''}
-        </div>
-    `).join('');
+    container.innerHTML = cards.map((card, index) => {
+        if (card.choices && Array.isArray(card.choices)) {
+            // Multiple Choice Card
+            return `
+                <div class="card-preview-enhanced multiple-choice-card">
+                    <div class="card-number">Question #${index + 1}</div>
+                    <div class="card-question">
+                        <div class="question-label">Question</div>
+                        <div class="question-text">${escapeHtml(card.question || 'No question')}</div>
+                    </div>
+                    <div class="card-choices">
+                        <div class="choices-label">Answer Choices</div>
+                        <div class="choices-list">
+                            ${card.choices.map((choice, i) => `
+                                <div class="choice-item ${choice === card.answer ? 'correct-answer' : ''}">
+                                    <span class="choice-letter">${String.fromCharCode(65 + i)}</span>
+                                    <span class="choice-text">${escapeHtml(choice)}</span>
+                                    ${choice === card.answer ? '<span class="correct-badge">✓ Correct</span>' : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            // Q&A Flashcard
+            return `
+                <div class="card-preview-enhanced flashcard">
+                    <div class="card-number">Card #${index + 1}</div>
+                    <div class="card-question">
+                        <div class="question-label">Question</div>
+                        <div class="question-text">${escapeHtml(card.question || 'No question')}</div>
+                    </div>
+                    <div class="card-answer">
+                        <div class="answer-label">Answer</div>
+                        <div class="answer-text">${escapeHtml(card.answer || 'No answer')}</div>
+                    </div>
+                </div>
+            `;
+        }
+    }).join('');
     
     document.getElementById('cardsPreview').classList.remove('hidden');
     document.getElementById('saveCardsBtn').onclick = saveCards;
