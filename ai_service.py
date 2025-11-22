@@ -25,18 +25,36 @@ def generate_summary(text, max_words=200, user_api_key=None):
         return "Please configure your Gemini API key in Settings to use AI generation."
 
     try:
-        prompt = f"""Please provide a concise summary of the following text in approximately {max_words} words:
+        prompt = f"""You are an expert content summarizer. Create a well-structured, professional summary of the following text in approximately {max_words} words.
 
+Requirements:
+- Organize the summary into clear, logical paragraphs (2-4 paragraphs recommended)
+- Each paragraph should cover a distinct main idea or theme
+- Use proper spacing between paragraphs (double line breaks)
+- Write in clear, professional language
+- Maintain proper grammar and punctuation
+- Start with an overview, then cover key points in subsequent paragraphs
+- Conclude with the most important takeaway if space allows
+
+Text:
 {text}
 
-Summary:"""
+Provide a well-formatted summary with clear paragraph breaks:"""
 
         response = current_model.generate_content(prompt)
         
         if GEMINI_API_KEY and user_api_key:
             genai.configure(api_key=GEMINI_API_KEY)
         
-        return response.text.strip()
+        summary = response.text.strip()
+        
+        # Ensure proper paragraph formatting
+        # Replace single newlines with double newlines for better spacing
+        summary = re.sub(r'\n(?!\n)', '\n\n', summary)
+        # Remove any triple or more newlines
+        summary = re.sub(r'\n{3,}', '\n\n', summary)
+        
+        return summary
     except Exception as e:
         if GEMINI_API_KEY and user_api_key:
             genai.configure(api_key=GEMINI_API_KEY)
