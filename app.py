@@ -95,9 +95,6 @@ def process_text():
     if not text:
         return jsonify({'error': 'No text provided'}), 400
     
-    if len(text) > 50000:
-        return jsonify({'error': 'Text too long. Maximum 50,000 characters.'}), 400
-    
     if len(text) < 50:
         return jsonify({'error': 'Text too short. Please provide at least 50 characters.'}), 400
     
