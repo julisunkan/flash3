@@ -77,6 +77,11 @@ async function generateContent() {
         return;
     }
     
+    if (text.length < 50) {
+        showToast('Text is too short. Please provide at least 50 characters (current: ' + text.length + ')', 'warning');
+        return;
+    }
+    
     const genType = document.querySelector('input[name="genType"]:checked').value;
     const numCards = parseInt(document.getElementById('numCards').value) || 10;
     
