@@ -128,17 +128,19 @@ def generate_flashcards_pdf(cards, deck_name="Flashcards"):
         # Check if it's a multiple choice question
         if 'choices' in card and card['choices'] and isinstance(card['choices'], list):
             # Multiple choice - compare original values before escaping
-            original_answer = card.get('answer', '').strip()
+            original_answer = str(card.get('answer', '')).strip()
             story.append(Paragraph("<b>Answer Choices:</b>", question_style))
             
             for j, choice in enumerate(card['choices'][:10]):  # Limit to 10 choices max
                 if not choice:
                     continue
-                    
+                
+                # Convert choice to string for comparison
+                choice_str = str(choice).strip()
                 letter = chr(65 + j)  # A, B, C, D
-                safe_choice = escape_for_pdf(choice)
+                safe_choice = escape_for_pdf(choice_str)
                 # Compare original values
-                is_correct = choice.strip() == original_answer
+                is_correct = choice_str == original_answer
                 
                 if is_correct:
                     choice_text = f"<b>{letter}. {safe_choice} ✓ (Correct)</b>"

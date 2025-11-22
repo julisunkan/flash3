@@ -352,7 +352,10 @@ def export_deck(deck_id, format):
                 download_name=f"{safe_deck_name or 'deck'}_flashcards.pdf"
             )
         except Exception as e:
-            return jsonify({'error': 'Failed to generate PDF'}), 500
+            print(f"PDF generation error: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({'error': f'Failed to generate PDF: {str(e)}'}), 500
     
     return jsonify({'error': 'Invalid format'}), 400
 
