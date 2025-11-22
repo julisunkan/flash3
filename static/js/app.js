@@ -192,6 +192,48 @@ function displayCardsPreview(cards) {
     
     document.getElementById('cardsPreview').classList.remove('hidden');
     document.getElementById('saveCardsBtn').onclick = saveCards;
+    document.getElementById('exportPdfBtn').onclick = exportPdf;
+}
+
+async function exportPdf() {
+    if (generatedCards.length === 0) {
+        showToast('No cards to export', 'warning');
+        return;
+    }
+    
+    const deckName = document.getElementById('deckName').value.trim() || 'Flashcards';
+    
+    try {
+        const response = await fetch('/api/export-cards-pdf', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                cards: generatedCards,
+                deck_name: deckName
+            })
+        });
+        
+        if (!response.ok) {
+            const data = await response.json();
+            showToast(data.error || 'Error exporting PDF', 'error');
+            return;
+        }
+        
+        // Download the PDF
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${deckName.replace(/\s+/g, '_')}_flashcards.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        showToast('PDF exported successfully!', 'success');
+    } catch (error) {
+        showToast('Error exporting PDF: ' + error.message, 'error');
+    }
 }
 
 async function saveCards() {

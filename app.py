@@ -9,6 +9,7 @@ from datetime import datetime
 from models import init_db, Deck, Card, StudySession, QuizResult, Badge
 from ai_service import generate_summary, generate_flashcards, generate_multiple_choice
 from utils import process_pdf_file, allowed_file, clean_text
+from pdf_generator import generate_flashcards_pdf
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SESSION_SECRET', 'dev-secret-key-change-in-production')
@@ -314,6 +315,32 @@ def export_deck(deck_id, format):
         }
     
     return jsonify({'error': 'Invalid format'}), 400
+
+@app.route('/api/export-cards-pdf', methods=['POST'])
+def export_cards_pdf():
+    """Export generated cards to PDF"""
+    if not request.json:
+        return jsonify({'error': 'Invalid request'}), 400
+    
+    cards = request.json.get('cards', [])
+    deck_name = request.json.get('deck_name', 'Flashcards')
+    
+    if not cards or not isinstance(cards, list):
+        return jsonify({'error': 'No cards provided'}), 400
+    
+    try:
+        pdf_buffer = generate_flashcards_pdf(cards, deck_name)
+        
+        filename = f"{deck_name.replace(' ', '_')}_flashcards.pdf"
+        
+        return send_file(
+            pdf_buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=filename
+        )
+    except Exception as e:
+        return jsonify({'error': f'Failed to generate PDF: {str(e)}'}), 500
 
 @app.route('/deck/<int:deck_id>')
 def deck_page(deck_id):

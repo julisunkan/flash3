@@ -252,6 +252,36 @@ textarea:focus {
     transform: none;
 }
 
+.secondary-btn {
+    background: var(--secondary);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.secondary-btn:hover {
+    background: #7c3aed;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.preview-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.preview-actions button {
+    flex: 1;
+    min-width: 200px;
+}
+
 .loading {
     text-align: center;
     padding: 40px;
